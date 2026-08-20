@@ -1,0 +1,14 @@
+link 1:
+https://www.arduino.cc/
+
+link 2:
+https://www.arduino.cc/en/software
+
+link 3:
+https://www.arduino.cc/reference/en/
+
+link 4 (ESP32):
+https://dl.espressif.com/dl/package_esp32_index.json
+
+
+
