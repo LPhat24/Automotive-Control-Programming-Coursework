@@ -1,0 +1,38 @@
+
+#include <mega328p.h>
+#include <delay.h>
+
+void main(void)
+{
+int delay_time = 1000;
+int delay_step = -100;
+
+// Crystal Oscillator division factor: 1
+#pragma optsize-
+CLKPR=(1<<CLKPCE);
+CLKPR=(0<<CLKPCE) | (0<<CLKPS3) | (0<<CLKPS2) | (0<<CLKPS1) | (0<<CLKPS0);
+#ifdef _OPTIMIZE_SIZE_
+#pragma optsize+
+#endif
+
+while (1)
+      {
+      // Place your code here
+      PORTD.6 = 1; // Turn PORTD pin 6 on
+      delay_ms(delay_time); // Wait for the current period
+      PORTD.6 = 0; // Turn PORTD pin 6 off
+      delay_ms(delay_time); // Wait for the current period
+
+      delay_time += delay_step;
+      if (delay_time <= 100)
+            {
+            delay_time = 100;
+            delay_step = 100;
+            }
+      else if (delay_time >= 1000)
+            {
+            delay_time = 1000;
+            delay_step = -100;
+            }
+      }
+}
