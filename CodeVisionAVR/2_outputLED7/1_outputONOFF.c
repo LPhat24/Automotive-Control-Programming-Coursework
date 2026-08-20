@@ -52,10 +52,10 @@ void Display7SEGMENT(unsigned char num)
 }
 
 // Turn off all segments of the 7-segment LED
-void turn_off_segments()
-{
-      LEDa = 0; LEDb = 0; LEDc = 0; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0;
-}
+// void turn_off_segments()
+// {
+//       LEDa = 0; LEDb = 0; LEDc = 0; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0;
+// }
 
 void main(void)
 {
@@ -67,8 +67,18 @@ void main(void)
     #pragma optsize+
     #endif
 
-    DDRD = 0x60;  // PD5, PD6 as outputs
-    DDRB = 0x1F;  // PB0..PB4 as outputs
+    DDRD.6 = 1; // Set PORTD pin 6 as output (Segment a)
+    DDRB.0 = 1; // Set PORTB pin 0 as output (Segment b)
+    DDRB.1 = 1; // Set PORTB pin 1 as output (Segment c)
+    DDRD.5 = 1; // Set PORTD pin 5 as output (Segment d)
+    DDRB.2 = 1; // Set PORTB pin 2 as output (Segment e)
+    DDRB.3 = 1; // Set PORTB pin 3 as output (Segment f)
+    DDRB.4 = 1; // Set PORTB pin 4 as output (Segment g)
+
+    DDRD.4 = 0; // Set PORTD pin 4 as input (LED ON/OFF control)
+    PORTD.4 = 1; // Enable pull-up resistor on PORTD pin 4
+    DDRD.7 = 0; // Set PORTD pin 7 as input (LED ON/OFF control)
+    PORTD.7 = 1; // Enable pull-up resistor on PORTD pin 7
 
     Display7SEGMENT(20); // Turn on all segments
     delay_ms(1000);     // Wait for 1000 ms

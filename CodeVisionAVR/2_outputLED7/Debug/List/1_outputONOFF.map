@@ -15,4 +15,4 @@ FLASH Allocation [words]
 Function                                                                          Address   Size
 ------------------------------------------------------------------------------------------------
 Display7SEGMENT                                                                   0x00051     99
-main                                                                              0x000B4     36
+main                                                                              0x000B4     41

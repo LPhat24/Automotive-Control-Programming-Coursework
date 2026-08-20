@@ -301,92 +301,96 @@
 ;PCODE: $000000EA VOL: 0
 ;
 ;// Turn off all segments of the 7-segment LED
-;void turn_off_segments()
-; 0000 0038 {
-;PCODE: $000000EB VOL: 0
-;PCODE: $000000EC VOL: 0
-; 0000 0039       LEDa = 0; LEDb = 0; LEDc = 0; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0;
-;PCODE: $000000ED VOL: 0
-;PCODE: $000000EE VOL: 0
-;PCODE: $000000EF VOL: 0
-;PCODE: $000000F0 VOL: 0
-;PCODE: $000000F1 VOL: 0
-;PCODE: $000000F2 VOL: 0
-;PCODE: $000000F3 VOL: 0
-;PCODE: $000000F4 VOL: 0
-;PCODE: $000000F5 VOL: 0
-;PCODE: $000000F6 VOL: 0
-;PCODE: $000000F7 VOL: 0
-;PCODE: $000000F8 VOL: 0
-;PCODE: $000000F9 VOL: 0
-;PCODE: $000000FA VOL: 0
-; 0000 003A }
-;PCODE: $000000FB VOL: 0
-;PCODE: $000000FC VOL: 0
+;// void turn_off_segments()
+;// {
+;//       LEDa = 0; LEDb = 0; LEDc = 0; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0;
+;// }
 ;
 ;void main(void)
 ; 0000 003D {
-;PCODE: $000000FD VOL: 0
+;PCODE: $000000EB VOL: 0
 ; 0000 003E     // Crystal Oscillator division factor: 1
 ; 0000 003F     #pragma optsize-
 ; 0000 0040     CLKPR = (1<<CLKPCE);
-;PCODE: $000000FE VOL: 0
-;PCODE: $000000FF VOL: 0
+;PCODE: $000000EC VOL: 0
+;PCODE: $000000ED VOL: 0
 ; 0000 0041     CLKPR = (0<<CLKPCE) | (0<<CLKPS3) | (0<<CLKPS2) | (0<<CLKPS1) | (0<<CLKPS0);
-;PCODE: $00000100 VOL: 0
-;PCODE: $00000101 VOL: 0
+;PCODE: $000000EE VOL: 0
+;PCODE: $000000EF VOL: 0
 ; 0000 0042     #ifdef _OPTIMIZE_SIZE_
 ; 0000 0043     #pragma optsize+
 ; 0000 0044     #endif
 ; 0000 0045 
-; 0000 0046     DDRD = 0x60;  // PD5, PD6 as outputs
+; 0000 0046     DDRD.6 = 1; // Set PORTD pin 6 as output (Segment a)
+;PCODE: $000000F0 VOL: 0
+;PCODE: $000000F1 VOL: 0
+; 0000 0047     DDRB.0 = 1; // Set PORTB pin 0 as output (Segment b)
+;PCODE: $000000F2 VOL: 0
+;PCODE: $000000F3 VOL: 0
+; 0000 0048     DDRB.1 = 1; // Set PORTB pin 1 as output (Segment c)
+;PCODE: $000000F4 VOL: 0
+;PCODE: $000000F5 VOL: 0
+; 0000 0049     DDRD.5 = 1; // Set PORTD pin 5 as output (Segment d)
+;PCODE: $000000F6 VOL: 0
+;PCODE: $000000F7 VOL: 0
+; 0000 004A     DDRB.2 = 1; // Set PORTB pin 2 as output (Segment e)
+;PCODE: $000000F8 VOL: 0
+;PCODE: $000000F9 VOL: 0
+; 0000 004B     DDRB.3 = 1; // Set PORTB pin 3 as output (Segment f)
+;PCODE: $000000FA VOL: 0
+;PCODE: $000000FB VOL: 0
+; 0000 004C     DDRB.4 = 1; // Set PORTB pin 4 as output (Segment g)
+;PCODE: $000000FC VOL: 0
+;PCODE: $000000FD VOL: 0
+; 0000 004D 
+; 0000 004E     DDRD.7 = 0; // Set PORTD pin 7 as input (LED ON/OFF control)
+;PCODE: $000000FE VOL: 0
+;PCODE: $000000FF VOL: 0
+; 0000 004F     PORTD.7 = 1; // Enable pull-up resistor on PORTD pin 7
+;PCODE: $00000100 VOL: 0
+;PCODE: $00000101 VOL: 0
+; 0000 0050 
+; 0000 0051     Display7SEGMENT(20); // Turn on all segments
 ;PCODE: $00000102 VOL: 0
 ;PCODE: $00000103 VOL: 0
-; 0000 0047     DDRB = 0x1F;  // PB0..PB4 as outputs
+; 0000 0052     delay_ms(1000);     // Wait for 1000 ms
 ;PCODE: $00000104 VOL: 0
 ;PCODE: $00000105 VOL: 0
-; 0000 0048 
-; 0000 0049     Display7SEGMENT(20); // Turn on all segments
+; 0000 0053 
+; 0000 0054     while (1)
 ;PCODE: $00000106 VOL: 0
+; 0000 0055     {
+; 0000 0056         for (i = 0; i < 10; i++)
 ;PCODE: $00000107 VOL: 0
-; 0000 004A     delay_ms(1000);     // Wait for 1000 ms
 ;PCODE: $00000108 VOL: 0
 ;PCODE: $00000109 VOL: 0
-; 0000 004B 
-; 0000 004C     while (1)
 ;PCODE: $0000010A VOL: 0
-; 0000 004D     {
-; 0000 004E         for (i = 0; i < 10; i++)
 ;PCODE: $0000010B VOL: 0
 ;PCODE: $0000010C VOL: 0
 ;PCODE: $0000010D VOL: 0
+; 0000 0057         {
+; 0000 0058             Display7SEGMENT(i); // Display digits 0 to 9
 ;PCODE: $0000010E VOL: 0
 ;PCODE: $0000010F VOL: 0
+; 0000 0059             delay_ms(200);     // Wait for 200 ms
 ;PCODE: $00000110 VOL: 0
 ;PCODE: $00000111 VOL: 0
-; 0000 004F         {
-; 0000 0050             Display7SEGMENT(i); // Display digits 0 to 9
 ;PCODE: $00000112 VOL: 0
+; 0000 005A         }
 ;PCODE: $00000113 VOL: 0
-; 0000 0051             delay_ms(200);     // Wait for 200 ms
 ;PCODE: $00000114 VOL: 0
 ;PCODE: $00000115 VOL: 0
 ;PCODE: $00000116 VOL: 0
-; 0000 0052         }
+; 0000 005B         Display7SEGMENT(16); // Turn off all segments
 ;PCODE: $00000117 VOL: 0
 ;PCODE: $00000118 VOL: 0
+; 0000 005C         delay_ms(500);     // Wait for 500 ms
 ;PCODE: $00000119 VOL: 0
 ;PCODE: $0000011A VOL: 0
-; 0000 0053         Display7SEGMENT(16); // Turn off all segments
+; 0000 005D     }
 ;PCODE: $0000011B VOL: 0
 ;PCODE: $0000011C VOL: 0
-; 0000 0054         delay_ms(500);     // Wait for 500 ms
+; 0000 005E }
 ;PCODE: $0000011D VOL: 0
 ;PCODE: $0000011E VOL: 0
-; 0000 0055     }
 ;PCODE: $0000011F VOL: 0
-;PCODE: $00000120 VOL: 0
-; 0000 0056 }
-;PCODE: $00000121 VOL: 0
-;PCODE: $00000122 VOL: 0
-;PCODE: $00000123 VOL: 0

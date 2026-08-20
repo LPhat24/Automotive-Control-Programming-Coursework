@@ -1361,10 +1361,10 @@ _0xA8:
 ; .FEND
 ;
 ;// Turn off all segments of the 7-segment LED
-;void turn_off_segments()
-; 0000 0038 {
-; 0000 0039       LEDa = 0; LEDb = 0; LEDc = 0; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0;
-; 0000 003A }
+;// void turn_off_segments()
+;// {
+;//       LEDa = 0; LEDb = 0; LEDc = 0; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0;
+;// }
 ;
 ;void main(void)
 ; 0000 003D {
@@ -1382,54 +1382,67 @@ _main:
 ; 0000 0043     #pragma optsize+
 ; 0000 0044     #endif
 ; 0000 0045 
-; 0000 0046     DDRD = 0x60;  // PD5, PD6 as outputs
-	LDI  R30,LOW(96)
-	OUT  0xA,R30
-; 0000 0047     DDRB = 0x1F;  // PB0..PB4 as outputs
-	LDI  R30,LOW(31)
-	OUT  0x4,R30
-; 0000 0048 
-; 0000 0049     Display7SEGMENT(20); // Turn on all segments
+; 0000 0046     DDRD.6 = 1; // Set PORTD pin 6 as output (Segment a)
+	SBI  0xA,6
+; 0000 0047     DDRB.0 = 1; // Set PORTB pin 0 as output (Segment b)
+	SBI  0x4,0
+; 0000 0048     DDRB.1 = 1; // Set PORTB pin 1 as output (Segment c)
+	SBI  0x4,1
+; 0000 0049     DDRD.5 = 1; // Set PORTD pin 5 as output (Segment d)
+	SBI  0xA,5
+; 0000 004A     DDRB.2 = 1; // Set PORTB pin 2 as output (Segment e)
+	SBI  0x4,2
+; 0000 004B     DDRB.3 = 1; // Set PORTB pin 3 as output (Segment f)
+	SBI  0x4,3
+; 0000 004C     DDRB.4 = 1; // Set PORTB pin 4 as output (Segment g)
+	SBI  0x4,4
+; 0000 004D 
+; 0000 004E     DDRD.7 = 0; // Set PORTD pin 7 as input (LED ON/OFF control)
+	CBI  0xA,7
+; 0000 004F     PORTD.7 = 1; // Enable pull-up resistor on PORTD pin 7
+	SBI  0xB,7
+; 0000 0050 
+; 0000 0051     Display7SEGMENT(20); // Turn on all segments
 	LDI  R26,LOW(20)
 	RCALL _Display7SEGMENT
-; 0000 004A     delay_ms(1000);     // Wait for 1000 ms
+; 0000 0052     delay_ms(1000);     // Wait for 1000 ms
 	LDI  R26,LOW(1000)
 	LDI  R27,HIGH(1000)
 	CALL _delay_ms
-; 0000 004B 
-; 0000 004C     while (1)
-_0xC5:
-; 0000 004D     {
-; 0000 004E         for (i = 0; i < 10; i++)
-	CLR  R4
+; 0000 0053 
+; 0000 0054     while (1)
 _0xC9:
+; 0000 0055     {
+; 0000 0056         for (i = 0; i < 10; i++)
+	CLR  R4
+_0xCD:
 	LDI  R30,LOW(10)
 	CP   R4,R30
-	BRSH _0xCA
-; 0000 004F         {
-; 0000 0050             Display7SEGMENT(i); // Display digits 0 to 9
+	BRSH _0xCE
+; 0000 0057         {
+; 0000 0058             Display7SEGMENT(i); // Display digits 0 to 9
 	MOV  R26,R4
 	RCALL _Display7SEGMENT
-; 0000 0051             delay_ms(200);     // Wait for 200 ms
+; 0000 0059             delay_ms(200);     // Wait for 200 ms
 	LDI  R26,LOW(200)
 	LDI  R27,0
 	CALL _delay_ms
-; 0000 0052         }
+; 0000 005A         }
 	INC  R4
-	RJMP _0xC9
-_0xCA:
-; 0000 0053         Display7SEGMENT(16); // Turn off all segments
+	RJMP _0xCD
+_0xCE:
+; 0000 005B         Display7SEGMENT(16); // Turn off all segments
 	LDI  R26,LOW(16)
 	RCALL _Display7SEGMENT
-; 0000 0054         delay_ms(500);     // Wait for 500 ms
+; 0000 005C         delay_ms(500);     // Wait for 500 ms
 	LDI  R26,LOW(500)
 	LDI  R27,HIGH(500)
 	CALL _delay_ms
-; 0000 0055     }
-	RJMP _0xC5
-; 0000 0056 }
-_0xCB:
-	RJMP _0xCB
+; 0000 005D     }
+	RJMP _0xC9
+; 0000 005E }
+_0xCF:
+	RJMP _0xCF
 ; .FEND
 
 	.CSEG

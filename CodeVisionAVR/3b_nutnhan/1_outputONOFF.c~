@@ -1,0 +1,78 @@
+#include <mega328p.h>
+#include <delay.h>
+
+//--7 SEGMENT LED--
+#define LEDa PORTD.6  // Segment a -> PORTD pin 6
+#define LEDb PORTB.0  // Segment b -> PORTB pin 0
+#define LEDc PORTB.1  // Segment c -> PORTB pin 1
+#define LEDd PORTD.5  // Segment d -> PORTD pin 5
+#define LEDe PORTB.2  // Segment e -> PORTB pin 2
+#define LEDf PORTB.3  // Segment f -> PORTB pin 3
+#define LEDg PORTB.4  // Segment g -> PORTB pin 4
+
+// Segment patterns for digits 0..9 (order: a,b,c,d,e,f,g)
+const unsigned char digit[10][7] = {
+    {1,1,1,1,1,1,0}, // 0
+    {0,1,1,0,0,0,0}, // 1
+    {1,1,0,1,1,0,1}, // 2
+    {1,1,1,1,0,0,1}, // 3
+    {0,1,1,0,0,1,1}, // 4
+    {1,0,1,1,0,1,1}, // 5
+    {1,0,1,1,1,1,1}, // 6
+    {1,1,1,0,0,0,0}, // 7
+    {1,1,1,1,1,1,1}, // 8
+    {1,1,1,1,0,1,1}, // 9
+};
+
+void display_digit(unsigned char num)
+{
+    LEDa = digit[num][0];
+    LEDb = digit[num][1];
+    LEDc = digit[num][2];
+    LEDd = digit[num][3];
+    LEDe = digit[num][4];
+    LEDf = digit[num][5];
+    LEDg = digit[num][6];
+}
+
+void main(void)
+{
+    // Crystal Oscillator division factor: 1
+    #pragma optsize-
+    CLKPR = (1<<CLKPCE);
+    CLKPR = (0<<CLKPCE) | (0<<CLKPS3) | (0<<CLKPS2) | (0<<CLKPS1) | (0<<CLKPS0);
+    #ifdef _OPTIMIZE_SIZE_
+    #pragma optsize+
+    #endif
+
+    DDRD = 0x60;  // PD5, PD6 as outputs
+    DDRB = 0x1F;  // PB0..PB4 as outputs
+
+    while (1)
+    {
+        unsigned char d, i;
+        for (d = 0; d < 10; d++)  // Cycle 0..9
+        {
+            display_digit(d);
+            delay_ms(500);        // 500 ms per digit
+        }
+        LEDa = 0; LEDb = 0; LEDc = 0; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; // Turn off all segments
+        delay_ms(500);
+
+        // Police flash after each full cycle
+        for (i = 0; i < 3; i++)   // Light A (PD5) 3 times
+        {
+            LEDd = 1;
+            delay_ms(70);
+            LEDd = 0;
+            delay_ms(70);
+        }
+        for (i = 0; i < 3; i++)   // Light B (PD6) 3 times
+        {
+            LEDa = 1;
+            delay_ms(70);
+            LEDa = 0;
+            delay_ms(70);
+        }
+    }
+}
