@@ -12,9 +12,13 @@ Variable                                                                        
 i                                                                                 R4           1
 nutSW1                                                                            R3           1
 nutSW2                                                                            R6           1
+nutSW1truoc                                                                       R5           1
+nutSW2truoc                                                                       R8           1
+demNut1                                                                           R7           1
+demNut2                                                                           R10          1
 
 FLASH Allocation [words]
 Function                                                                          Address   Size
 ------------------------------------------------------------------------------------------------
 Display7SEGMENT                                                                   0x00051     99
-main                                                                              0x000B4     53
+main                                                                              0x000B4     67

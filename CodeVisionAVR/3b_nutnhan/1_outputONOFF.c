@@ -23,9 +23,11 @@ const unsigned char digit[10][7] = {
     {1,1,1,1,1,1,1}, // 8
     {1,1,1,1,0,1,1}, // 9
 };
-
+//------------------------------------------------------------------------------------------
 unsigned char i;  // Variable to hold the current digit to display
-unsigned char nutSW1, nutSW2;  // Variables to hold the state of the switches
+unsigned char nutSW1, nutSW2, nutSW1truoc, nutSW2truoc;  // Variables to hold the state of the switches
+unsigned char demNut1, demNut2; // Variable to hold the count of button presses for switch 1 and switch 2
+//------------------------------------------------------------------------------------------
 
 // Function to display a digit on the 7-segment LED
 void Display7SEGMENT(unsigned char num) 
@@ -88,23 +90,18 @@ void main(void)
 
     while (1)
     {
+        nutSW1truoc = nutSW1; // Store the previous state of switch 1
+        nutSW2truoc = nutSW2; // Store the previous state of switch 2
         nutSW1 = PIND.4; // Read the state of switch 1 (PORTD pin 4)
         nutSW2 = PIND.7; // Read the state of switch 2 (PORTD pin 7)
         
-        if (nutSW1 == 0) // If PORTD pin 4 is LOW (button pressed)
+        if (nutSW2 == 0 && nutSW2truoc == 1) // If PORTD pin 7 is LOW (button pressed) and was HIGH before
         {
-            Display7SEGMENT(1); // Turn on all segments
-            delay_ms(10);     // Wait for 10 ms
+            demNut2++; // Increment the count of button presses for switch 2
+            if (demNut2 > 9) demNut2 = 0; // Reset count if it exceeds 9
+            Display7SEGMENT(demNut2); // Display the count on the 7-segment LED
         }
-        else if (nutSW2 == 0) // If PORTD pin 7 is LOW (button pressed)
-        {
-            Display7SEGMENT(2); // Turn off all segments
-            delay_ms(10);     // Wait for 10 ms
-        }
-        else 
-        {
-            Display7SEGMENT(16); // Turn off all segments
-            delay_ms(10);     // Wait for 10 ms
-        }
+        
+        delay_ms(20); // Wait for 20 ms to debounce the button press
     }
 }

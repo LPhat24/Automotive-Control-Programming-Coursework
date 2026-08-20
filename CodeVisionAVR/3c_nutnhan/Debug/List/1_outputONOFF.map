@@ -1,0 +1,22 @@
+RAM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+
+EEPROM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+
+Register Allocation
+Variable                                                                          Register  Size
+------------------------------------------------------------------------------------------------
+nutSW1                                                                            R4           1
+nutSW2                                                                            R3           1
+nutSW1truoc                                                                       R6           1
+nutSW2truoc                                                                       R5           1
+demNut1                                                                           R8           1
+
+FLASH Allocation [words]
+Function                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+Display7SEGMENT                                                                   0x00051     99
+main                                                                              0x000B4     69

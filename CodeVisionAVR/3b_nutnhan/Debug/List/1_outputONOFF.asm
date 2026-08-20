@@ -1090,6 +1090,10 @@ __DELAY_USW_LOOP:
 	.DEF _i=R4
 	.DEF _nutSW1=R3
 	.DEF _nutSW2=R6
+	.DEF _nutSW1truoc=R5
+	.DEF _nutSW2truoc=R8
+	.DEF _demNut1=R7
+	.DEF _demNut2=R10
 
 ;GPIOR0 INITIALIZATION VALUE
 	.EQU __GPIOR0_INIT=0x00
@@ -1217,25 +1221,27 @@ __CLEAR_SRAM:
 ;    {1,1,1,1,1,1,1}, // 8
 ;    {1,1,1,1,0,1,1}, // 9
 ;};
-;
+;//------------------------------------------------------------------------------------------
 ;unsigned char i;  // Variable to hold the current digit to display
-;unsigned char nutSW1, nutSW2;  // Variables to hold the state of the switches
+;unsigned char nutSW1, nutSW2, nutSW1truoc, nutSW2truoc;  // Variables to hold the state of the switches
+;unsigned char demNut1, demNut2; // Variable to hold the count of button presses for switch 1 and switch 2
+;//------------------------------------------------------------------------------------------
 ;
 ;// Function to display a digit on the 7-segment LED
 ;void Display7SEGMENT(unsigned char num)
-; 0000 0020 {
+; 0000 0022 {
 
 	.CSEG
 _Display7SEGMENT:
 ; .FSTART _Display7SEGMENT
-; 0000 0021 //     LEDa = digit[num][0];
-; 0000 0022 //     LEDb = digit[num][1];
-; 0000 0023 //     LEDc = digit[num][2];
-; 0000 0024 //     LEDd = digit[num][3];
-; 0000 0025 //     LEDe = digit[num][4];
-; 0000 0026 //     LEDf = digit[num][5];
-; 0000 0027 //     LEDg = digit[num][6];
-; 0000 0028     if (num == 0 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 0; }
+; 0000 0023 //     LEDa = digit[num][0];
+; 0000 0024 //     LEDb = digit[num][1];
+; 0000 0025 //     LEDc = digit[num][2];
+; 0000 0026 //     LEDd = digit[num][3];
+; 0000 0027 //     LEDe = digit[num][4];
+; 0000 0028 //     LEDf = digit[num][5];
+; 0000 0029 //     LEDg = digit[num][6];
+; 0000 002A     if (num == 0 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 0; }
 	ST   -Y,R26
 ;	num -> Y+0
 	LD   R30,Y
@@ -1245,7 +1251,7 @@ _Display7SEGMENT:
 	SBI  0x5,2
 	SBI  0x5,3
 	CBI  0x5,4
-; 0000 0029     if (num == 1 ) { LEDa = 0; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
+; 0000 002B     if (num == 1 ) { LEDa = 0; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
 _0x3:
 	LD   R26,Y
 	CPI  R26,LOW(0x1)
@@ -1254,7 +1260,7 @@ _0x3:
 	RCALL SUBOPT_0x1
 	CBI  0x5,3
 	CBI  0x5,4
-; 0000 002A     if (num == 2 ) { LEDa = 1; LEDb = 1; LEDc = 0; LEDd = 1; LEDe = 1; LEDf = 0; LEDg = 1; }
+; 0000 002C     if (num == 2 ) { LEDa = 1; LEDb = 1; LEDc = 0; LEDd = 1; LEDe = 1; LEDf = 0; LEDg = 1; }
 _0x12:
 	LD   R26,Y
 	CPI  R26,LOW(0x2)
@@ -1266,7 +1272,7 @@ _0x12:
 	SBI  0x5,2
 	CBI  0x5,3
 	SBI  0x5,4
-; 0000 002B     if (num == 3 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 0; LEDg = 1; }
+; 0000 002D     if (num == 3 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 0; LEDg = 1; }
 _0x21:
 	LD   R26,Y
 	CPI  R26,LOW(0x3)
@@ -1275,7 +1281,7 @@ _0x21:
 	CBI  0x5,2
 	CBI  0x5,3
 	SBI  0x5,4
-; 0000 002C     if (num == 4 ) { LEDa = 0; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 1; LEDg = 1; }
+; 0000 002E     if (num == 4 ) { LEDa = 0; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 1; LEDg = 1; }
 _0x30:
 	LD   R26,Y
 	CPI  R26,LOW(0x4)
@@ -1284,7 +1290,7 @@ _0x30:
 	RCALL SUBOPT_0x1
 	SBI  0x5,3
 	SBI  0x5,4
-; 0000 002D     if (num == 5 ) { LEDa = 1; LEDb = 0; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 1; LEDg = 1; }
+; 0000 002F     if (num == 5 ) { LEDa = 1; LEDb = 0; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 1; LEDg = 1; }
 _0x3F:
 	LD   R26,Y
 	CPI  R26,LOW(0x5)
@@ -1296,7 +1302,7 @@ _0x3F:
 	CBI  0x5,2
 	SBI  0x5,3
 	SBI  0x5,4
-; 0000 002E     if (num == 6 ) { LEDa = 1; LEDb = 0; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
+; 0000 0030     if (num == 6 ) { LEDa = 1; LEDb = 0; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
 _0x4E:
 	LD   R26,Y
 	CPI  R26,LOW(0x6)
@@ -1308,7 +1314,7 @@ _0x4E:
 	SBI  0x5,2
 	SBI  0x5,3
 	SBI  0x5,4
-; 0000 002F     if (num == 7 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
+; 0000 0031     if (num == 7 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
 _0x5D:
 	LD   R26,Y
 	CPI  R26,LOW(0x7)
@@ -1317,7 +1323,7 @@ _0x5D:
 	RCALL SUBOPT_0x1
 	CBI  0x5,3
 	CBI  0x5,4
-; 0000 0030     if (num == 8 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
+; 0000 0032     if (num == 8 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
 _0x6C:
 	LD   R26,Y
 	CPI  R26,LOW(0x8)
@@ -1326,7 +1332,7 @@ _0x6C:
 	SBI  0x5,2
 	SBI  0x5,3
 	SBI  0x5,4
-; 0000 0031     if (num == 9 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 1; LEDg = 1; }
+; 0000 0033     if (num == 9 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 1; LEDg = 1; }
 _0x7B:
 	LD   R26,Y
 	CPI  R26,LOW(0x9)
@@ -1335,8 +1341,8 @@ _0x7B:
 	CBI  0x5,2
 	SBI  0x5,3
 	SBI  0x5,4
-; 0000 0032 
-; 0000 0033     if (num == 16) { LEDa = 0; LEDb = 0; LEDc = 0; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
+; 0000 0034 
+; 0000 0035     if (num == 16) { LEDa = 0; LEDb = 0; LEDc = 0; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
 _0x8A:
 	LD   R26,Y
 	CPI  R26,LOW(0x10)
@@ -1348,7 +1354,7 @@ _0x8A:
 	CBI  0x5,2
 	CBI  0x5,3
 	CBI  0x5,4
-; 0000 0034     if (num == 20) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
+; 0000 0036     if (num == 20) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
 _0x99:
 	LD   R26,Y
 	CPI  R26,LOW(0x14)
@@ -1357,7 +1363,7 @@ _0x99:
 	SBI  0x5,2
 	SBI  0x5,3
 	SBI  0x5,4
-; 0000 0035 }
+; 0000 0037 }
 _0xA8:
 	ADIW R28,1
 	RET
@@ -1370,110 +1376,129 @@ _0xA8:
 ;// }
 ;
 ;void main(void)
-; 0000 003E {
+; 0000 0040 {
 _main:
 ; .FSTART _main
-; 0000 003F     // Crystal Oscillator division factor: 1
-; 0000 0040     #pragma optsize-
-; 0000 0041     CLKPR = (1<<CLKPCE);
+; 0000 0041     // Crystal Oscillator division factor: 1
+; 0000 0042     #pragma optsize-
+; 0000 0043     CLKPR = (1<<CLKPCE);
 	LDI  R30,LOW(128)
 	STS  97,R30
-; 0000 0042     CLKPR = (0<<CLKPCE) | (0<<CLKPS3) | (0<<CLKPS2) | (0<<CLKPS1) | (0<<CLKPS0);
+; 0000 0044     CLKPR = (0<<CLKPCE) | (0<<CLKPS3) | (0<<CLKPS2) | (0<<CLKPS1) | (0<<CLKPS0);
 	LDI  R30,LOW(0)
 	STS  97,R30
-; 0000 0043     #ifdef _OPTIMIZE_SIZE_
-; 0000 0044     #pragma optsize+
-; 0000 0045     #endif
-; 0000 0046 
-; 0000 0047     DDRD.6 = 1; // Set PORTD pin 6 as output (Segment a)
+; 0000 0045     #ifdef _OPTIMIZE_SIZE_
+; 0000 0046     #pragma optsize+
+; 0000 0047     #endif
+; 0000 0048 
+; 0000 0049     DDRD.6 = 1; // Set PORTD pin 6 as output (Segment a)
 	SBI  0xA,6
-; 0000 0048     DDRB.0 = 1; // Set PORTB pin 0 as output (Segment b)
+; 0000 004A     DDRB.0 = 1; // Set PORTB pin 0 as output (Segment b)
 	SBI  0x4,0
-; 0000 0049     DDRB.1 = 1; // Set PORTB pin 1 as output (Segment c)
+; 0000 004B     DDRB.1 = 1; // Set PORTB pin 1 as output (Segment c)
 	SBI  0x4,1
-; 0000 004A     DDRD.5 = 1; // Set PORTD pin 5 as output (Segment d)
+; 0000 004C     DDRD.5 = 1; // Set PORTD pin 5 as output (Segment d)
 	SBI  0xA,5
-; 0000 004B     DDRB.2 = 1; // Set PORTB pin 2 as output (Segment e)
+; 0000 004D     DDRB.2 = 1; // Set PORTB pin 2 as output (Segment e)
 	SBI  0x4,2
-; 0000 004C     DDRB.3 = 1; // Set PORTB pin 3 as output (Segment f)
+; 0000 004E     DDRB.3 = 1; // Set PORTB pin 3 as output (Segment f)
 	SBI  0x4,3
-; 0000 004D     DDRB.4 = 1; // Set PORTB pin 4 as output (Segment g)
+; 0000 004F     DDRB.4 = 1; // Set PORTB pin 4 as output (Segment g)
 	SBI  0x4,4
-; 0000 004E 
-; 0000 004F     DDRD.4 = 0; // Set PORTD pin 4 as input (LED ON/OFF control)
+; 0000 0050 
+; 0000 0051     DDRD.4 = 0; // Set PORTD pin 4 as input (LED ON/OFF control)
 	CBI  0xA,4
-; 0000 0050     PORTD.4 = 1; // Enable pull-up resistor on PORTD pin 4
+; 0000 0052     PORTD.4 = 1; // Enable pull-up resistor on PORTD pin 4
 	SBI  0xB,4
-; 0000 0051     DDRD.7 = 0; // Set PORTD pin 7 as input (LED ON/OFF control)
+; 0000 0053     DDRD.7 = 0; // Set PORTD pin 7 as input (LED ON/OFF control)
 	CBI  0xA,7
-; 0000 0052     PORTD.7 = 1; // Enable pull-up resistor on PORTD pin 7
+; 0000 0054     PORTD.7 = 1; // Enable pull-up resistor on PORTD pin 7
 	SBI  0xB,7
-; 0000 0053 
-; 0000 0054     Display7SEGMENT(20); // Turn on all segments
+; 0000 0055 
+; 0000 0056     Display7SEGMENT(20); // Turn on all segments
 	LDI  R26,LOW(20)
 	RCALL _Display7SEGMENT
-; 0000 0055     delay_ms(1000);     // Wait for 1000 ms
+; 0000 0057     delay_ms(1000);     // Wait for 1000 ms
 	LDI  R26,LOW(1000)
 	LDI  R27,HIGH(1000)
 	CALL _delay_ms
-; 0000 0056     Display7SEGMENT(16); // Turn off all segments
+; 0000 0058     Display7SEGMENT(16); // Turn off all segments
 	LDI  R26,LOW(16)
 	RCALL _Display7SEGMENT
-; 0000 0057     delay_ms(500);     // Wait for 500 ms
+; 0000 0059     delay_ms(500);     // Wait for 500 ms
 	LDI  R26,LOW(500)
 	LDI  R27,HIGH(500)
 	CALL _delay_ms
-; 0000 0058 
-; 0000 0059     while (1)
+; 0000 005A 
+; 0000 005B     while (1)
 _0xCD:
-; 0000 005A     {
-; 0000 005B         nutSW1 = PIND.4; // Read the state of switch 1 (PORTD pin 4)
+; 0000 005C     {
+; 0000 005D         nutSW1truoc = nutSW1; // Store the previous state of switch 1
+	MOV  R5,R3
+; 0000 005E         nutSW2truoc = nutSW2; // Store the previous state of switch 2
+	MOV  R8,R6
+; 0000 005F         nutSW1 = PIND.4; // Read the state of switch 1 (PORTD pin 4)
 	LDI  R30,0
 	SBIC 0x9,4
 	LDI  R30,1
 	MOV  R3,R30
-; 0000 005C         nutSW2 = PIND.7; // Read the state of switch 2 (PORTD pin 7)
+; 0000 0060         nutSW2 = PIND.7; // Read the state of switch 2 (PORTD pin 7)
 	LDI  R30,0
 	SBIC 0x9,7
 	LDI  R30,1
 	MOV  R6,R30
-; 0000 005D 
-; 0000 005E         if (nutSW1 == 0) // If PORTD pin 4 is LOW (button pressed)
-	TST  R3
-	BRNE _0xD0
-; 0000 005F         {
-; 0000 0060             Display7SEGMENT(1); // Turn on all segments
-	LDI  R26,LOW(1)
-	RJMP _0xD5
-; 0000 0061             delay_ms(10);     // Wait for 10 ms
-; 0000 0062         }
-; 0000 0063         else if (nutSW2 == 0) // If PORTD pin 7 is LOW (button pressed)
-_0xD0:
+; 0000 0061 
+; 0000 0062         if (nutSW2 == 0 && nutSW2truoc == 1) // If PORTD pin 7 is LOW (button pressed) and was HIGH before
 	TST  R6
-	BRNE _0xD2
-; 0000 0064         {
-; 0000 0065             Display7SEGMENT(2); // Turn off all segments
-	LDI  R26,LOW(2)
-	RJMP _0xD5
-; 0000 0066             delay_ms(10);     // Wait for 10 ms
-; 0000 0067         }
-; 0000 0068         else
+	BRNE _0xD1
+	LDI  R30,LOW(1)
+	CP   R30,R8
+	BREQ _0xD2
+_0xD1:
+	RJMP _0xD0
 _0xD2:
-; 0000 0069         {
-; 0000 006A             Display7SEGMENT(16); // Turn off all segments
-	LDI  R26,LOW(16)
-_0xD5:
+; 0000 0063         {
+; 0000 0064             demNut2++; // Increment the count of button presses for switch 2
+	INC  R10
+; 0000 0065             if (demNut2 > 9) demNut2 = 0; // Reset count if it exceeds 9
+	LDI  R30,LOW(9)
+	CP   R30,R10
+	BRSH _0xD3
+	CLR  R10
+; 0000 0066             Display7SEGMENT(demNut2); // Display the count on the 7-segment LED
+_0xD3:
+	MOV  R26,R10
 	RCALL _Display7SEGMENT
-; 0000 006B             delay_ms(10);     // Wait for 10 ms
-	LDI  R26,LOW(10)
+; 0000 0067         }
+; 0000 0068         if (nutSW1 == 0 && nutSW1truoc == 1) // If PORTD pin 4 is LOW (button pressed) and was HIGH before
+_0xD0:
+	TST  R3
+	BRNE _0xD5
+	LDI  R30,LOW(1)
+	CP   R30,R5
+	BREQ _0xD6
+_0xD5:
+	RJMP _0xD4
+_0xD6:
+; 0000 0069         {
+; 0000 006A             demNut2--; // Decrement the count of button presses for switch 1
+	DEC  R10
+; 0000 006B             if (demNut2 < 0) demNut2 = 9; // Reset count if it goes below 0
+; 0000 006C             Display7SEGMENT(demNut2); // Display the count on the 7-segment LED
+	MOV  R26,R10
+	RCALL _Display7SEGMENT
+; 0000 006D         }
+; 0000 006E 
+; 0000 006F         delay_ms(20); // Wait for 20 ms to debounce the button press
+_0xD4:
+	LDI  R26,LOW(20)
 	LDI  R27,0
 	CALL _delay_ms
-; 0000 006C         }
-; 0000 006D     }
+; 0000 0070     }
 	RJMP _0xCD
-; 0000 006E }
-_0xD4:
-	RJMP _0xD4
+; 0000 0071 }
+_0xD8:
+	RJMP _0xD8
 ; .FEND
 
 	.CSEG
