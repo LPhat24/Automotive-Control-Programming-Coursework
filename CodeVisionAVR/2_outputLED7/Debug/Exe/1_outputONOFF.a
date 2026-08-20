@@ -48,14 +48,23 @@
 ;    {1,1,1,1,0,1,1}, // 9
 ;};
 ;
+;unsigned char i;  // Variable to hold the current digit to display
+;
 ;// Function to display a digit on the 7-segment LED
-;void display_digit(unsigned char num)
-; 0000 001D {
+;void Display7SEGMENT(unsigned char num)
+; 0000 001F {
 
 	.CSEG
 ;PCODE: $0000000D VOL: 0
 ;PCODE: $0000000E VOL: 0
-; 0000 001E     LEDa = digit[num][0];
+; 0000 0020 //     LEDa = digit[num][0];
+; 0000 0021 //     LEDb = digit[num][1];
+; 0000 0022 //     LEDc = digit[num][2];
+; 0000 0023 //     LEDd = digit[num][3];
+; 0000 0024 //     LEDe = digit[num][4];
+; 0000 0025 //     LEDf = digit[num][5];
+; 0000 0026 //     LEDg = digit[num][6];
+; 0000 0027     if (num == 0 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 0; }
 ;PCODE: $0000000F VOL: 0
 ;	num -> Y+0
 ;PCODE: $00000010 VOL: 0
@@ -72,10 +81,10 @@
 ;PCODE: $0000001B VOL: 0
 ;PCODE: $0000001C VOL: 0
 ;PCODE: $0000001D VOL: 0
-; 0000 001F     LEDb = digit[num][1];
 ;PCODE: $0000001E VOL: 0
 ;PCODE: $0000001F VOL: 0
 ;PCODE: $00000020 VOL: 0
+; 0000 0028     if (num == 1 ) { LEDa = 0; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
 ;PCODE: $00000021 VOL: 0
 ;PCODE: $00000022 VOL: 0
 ;PCODE: $00000023 VOL: 0
@@ -88,13 +97,13 @@
 ;PCODE: $0000002A VOL: 0
 ;PCODE: $0000002B VOL: 0
 ;PCODE: $0000002C VOL: 0
-; 0000 0020     LEDc = digit[num][2];
 ;PCODE: $0000002D VOL: 0
 ;PCODE: $0000002E VOL: 0
 ;PCODE: $0000002F VOL: 0
 ;PCODE: $00000030 VOL: 0
 ;PCODE: $00000031 VOL: 0
 ;PCODE: $00000032 VOL: 0
+; 0000 0029     if (num == 2 ) { LEDa = 1; LEDb = 1; LEDc = 0; LEDd = 1; LEDe = 1; LEDf = 0; LEDg = 1; }
 ;PCODE: $00000033 VOL: 0
 ;PCODE: $00000034 VOL: 0
 ;PCODE: $00000035 VOL: 0
@@ -104,7 +113,6 @@
 ;PCODE: $00000039 VOL: 0
 ;PCODE: $0000003A VOL: 0
 ;PCODE: $0000003B VOL: 0
-; 0000 0021     LEDd = digit[num][3];
 ;PCODE: $0000003C VOL: 0
 ;PCODE: $0000003D VOL: 0
 ;PCODE: $0000003E VOL: 0
@@ -114,13 +122,13 @@
 ;PCODE: $00000042 VOL: 0
 ;PCODE: $00000043 VOL: 0
 ;PCODE: $00000044 VOL: 0
+; 0000 002A     if (num == 3 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 0; LEDg = 1; }
 ;PCODE: $00000045 VOL: 0
 ;PCODE: $00000046 VOL: 0
 ;PCODE: $00000047 VOL: 0
 ;PCODE: $00000048 VOL: 0
 ;PCODE: $00000049 VOL: 0
 ;PCODE: $0000004A VOL: 0
-; 0000 0022     LEDe = digit[num][4];
 ;PCODE: $0000004B VOL: 0
 ;PCODE: $0000004C VOL: 0
 ;PCODE: $0000004D VOL: 0
@@ -133,10 +141,10 @@
 ;PCODE: $00000054 VOL: 0
 ;PCODE: $00000055 VOL: 0
 ;PCODE: $00000056 VOL: 0
+; 0000 002B     if (num == 4 ) { LEDa = 0; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 1; LEDg = 1; }
 ;PCODE: $00000057 VOL: 0
 ;PCODE: $00000058 VOL: 0
 ;PCODE: $00000059 VOL: 0
-; 0000 0023     LEDf = digit[num][5];
 ;PCODE: $0000005A VOL: 0
 ;PCODE: $0000005B VOL: 0
 ;PCODE: $0000005C VOL: 0
@@ -152,7 +160,7 @@
 ;PCODE: $00000066 VOL: 0
 ;PCODE: $00000067 VOL: 0
 ;PCODE: $00000068 VOL: 0
-; 0000 0024     LEDg = digit[num][6];
+; 0000 002C     if (num == 5 ) { LEDa = 1; LEDb = 0; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 1; LEDg = 1; }
 ;PCODE: $00000069 VOL: 0
 ;PCODE: $0000006A VOL: 0
 ;PCODE: $0000006B VOL: 0
@@ -168,71 +176,40 @@
 ;PCODE: $00000075 VOL: 0
 ;PCODE: $00000076 VOL: 0
 ;PCODE: $00000077 VOL: 0
-; 0000 0025 }
 ;PCODE: $00000078 VOL: 0
 ;PCODE: $00000079 VOL: 0
 ;PCODE: $0000007A VOL: 0
-;
-;// Turn off all segments of the 7-segment LED
-;void turn_off_segments()
-; 0000 0029 {
+; 0000 002D     if (num == 6 ) { LEDa = 1; LEDb = 0; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
 ;PCODE: $0000007B VOL: 0
 ;PCODE: $0000007C VOL: 0
-; 0000 002A       LEDa = 0;
 ;PCODE: $0000007D VOL: 0
 ;PCODE: $0000007E VOL: 0
-; 0000 002B       LEDb = 0;
 ;PCODE: $0000007F VOL: 0
 ;PCODE: $00000080 VOL: 0
-; 0000 002C       LEDc = 0;
 ;PCODE: $00000081 VOL: 0
 ;PCODE: $00000082 VOL: 0
-; 0000 002D       LEDd = 0;
 ;PCODE: $00000083 VOL: 0
 ;PCODE: $00000084 VOL: 0
-; 0000 002E       LEDe = 0;
 ;PCODE: $00000085 VOL: 0
 ;PCODE: $00000086 VOL: 0
-; 0000 002F       LEDf = 0;
 ;PCODE: $00000087 VOL: 0
 ;PCODE: $00000088 VOL: 0
-; 0000 0030       LEDg = 0;
 ;PCODE: $00000089 VOL: 0
 ;PCODE: $0000008A VOL: 0
-; 0000 0031 }
 ;PCODE: $0000008B VOL: 0
 ;PCODE: $0000008C VOL: 0
-;
-;void main(void)
-; 0000 0034 {
+; 0000 002E     if (num == 7 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
 ;PCODE: $0000008D VOL: 0
-; 0000 0035     // Crystal Oscillator division factor: 1
-; 0000 0036     #pragma optsize-
-; 0000 0037     CLKPR = (1<<CLKPCE);
 ;PCODE: $0000008E VOL: 0
 ;PCODE: $0000008F VOL: 0
-; 0000 0038     CLKPR = (0<<CLKPCE) | (0<<CLKPS3) | (0<<CLKPS2) | (0<<CLKPS1) | (0<<CLKPS0);
 ;PCODE: $00000090 VOL: 0
 ;PCODE: $00000091 VOL: 0
-; 0000 0039     #ifdef _OPTIMIZE_SIZE_
-; 0000 003A     #pragma optsize+
-; 0000 003B     #endif
-; 0000 003C 
-; 0000 003D     DDRD = 0x60;  // PD5, PD6 as outputs
 ;PCODE: $00000092 VOL: 0
 ;PCODE: $00000093 VOL: 0
-; 0000 003E     DDRB = 0x1F;  // PB0..PB4 as outputs
 ;PCODE: $00000094 VOL: 0
 ;PCODE: $00000095 VOL: 0
-; 0000 003F 
-; 0000 0040     while (1)
 ;PCODE: $00000096 VOL: 0
-; 0000 0041     {
-; 0000 0042         unsigned char d, i;
-; 0000 0043         for (d = 0; d < 10; d++)  // Cycle 0..9
 ;PCODE: $00000097 VOL: 0
-;	d -> Y+1
-;	i -> Y+0
 ;PCODE: $00000098 VOL: 0
 ;PCODE: $00000099 VOL: 0
 ;PCODE: $0000009A VOL: 0
@@ -240,33 +217,26 @@
 ;PCODE: $0000009C VOL: 0
 ;PCODE: $0000009D VOL: 0
 ;PCODE: $0000009E VOL: 0
+; 0000 002F     if (num == 8 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
 ;PCODE: $0000009F VOL: 0
 ;PCODE: $000000A0 VOL: 0
 ;PCODE: $000000A1 VOL: 0
-; 0000 0044         {
-; 0000 0045             display_digit(d);
 ;PCODE: $000000A2 VOL: 0
 ;PCODE: $000000A3 VOL: 0
-; 0000 0046             delay_ms(200);        // 200 ms per digit
 ;PCODE: $000000A4 VOL: 0
 ;PCODE: $000000A5 VOL: 0
 ;PCODE: $000000A6 VOL: 0
-; 0000 0047         }
 ;PCODE: $000000A7 VOL: 0
 ;PCODE: $000000A8 VOL: 0
 ;PCODE: $000000A9 VOL: 0
 ;PCODE: $000000AA VOL: 0
 ;PCODE: $000000AB VOL: 0
 ;PCODE: $000000AC VOL: 0
-; 0000 0048         turn_off_segments();  // Turn off all segments
 ;PCODE: $000000AD VOL: 0
-; 0000 0049         delay_ms(500);
 ;PCODE: $000000AE VOL: 0
 ;PCODE: $000000AF VOL: 0
-; 0000 004A 
-; 0000 004B         // Police flash after each full cycle
-; 0000 004C         for (i = 0; i < 3; i++)   // Light A (PD5) 3 times
 ;PCODE: $000000B0 VOL: 0
+; 0000 0030     if (num == 9 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 1; LEDg = 1; }
 ;PCODE: $000000B1 VOL: 0
 ;PCODE: $000000B2 VOL: 0
 ;PCODE: $000000B3 VOL: 0
@@ -276,29 +246,24 @@
 ;PCODE: $000000B7 VOL: 0
 ;PCODE: $000000B8 VOL: 0
 ;PCODE: $000000B9 VOL: 0
-; 0000 004D         {
-; 0000 004E             LEDd = 1;
 ;PCODE: $000000BA VOL: 0
 ;PCODE: $000000BB VOL: 0
-; 0000 004F             delay_ms(70);
 ;PCODE: $000000BC VOL: 0
 ;PCODE: $000000BD VOL: 0
 ;PCODE: $000000BE VOL: 0
-; 0000 0050             LEDd = 0;
 ;PCODE: $000000BF VOL: 0
 ;PCODE: $000000C0 VOL: 0
-; 0000 0051             delay_ms(70);
 ;PCODE: $000000C1 VOL: 0
 ;PCODE: $000000C2 VOL: 0
+; 0000 0031 
+; 0000 0032     if (num == 16) { LEDa = 0; LEDb = 0; LEDc = 0; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
 ;PCODE: $000000C3 VOL: 0
-; 0000 0052         }
 ;PCODE: $000000C4 VOL: 0
 ;PCODE: $000000C5 VOL: 0
 ;PCODE: $000000C6 VOL: 0
 ;PCODE: $000000C7 VOL: 0
 ;PCODE: $000000C8 VOL: 0
 ;PCODE: $000000C9 VOL: 0
-; 0000 0053         for (i = 0; i < 3; i++)   // Light B (PD6) 3 times
 ;PCODE: $000000CA VOL: 0
 ;PCODE: $000000CB VOL: 0
 ;PCODE: $000000CC VOL: 0
@@ -309,33 +274,119 @@
 ;PCODE: $000000D1 VOL: 0
 ;PCODE: $000000D2 VOL: 0
 ;PCODE: $000000D3 VOL: 0
-; 0000 0054         {
-; 0000 0055             LEDa = 1;
 ;PCODE: $000000D4 VOL: 0
+; 0000 0033     if (num == 20) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
 ;PCODE: $000000D5 VOL: 0
-; 0000 0056             delay_ms(70);
 ;PCODE: $000000D6 VOL: 0
 ;PCODE: $000000D7 VOL: 0
 ;PCODE: $000000D8 VOL: 0
-; 0000 0057             LEDa = 0;
 ;PCODE: $000000D9 VOL: 0
 ;PCODE: $000000DA VOL: 0
-; 0000 0058             delay_ms(70);
 ;PCODE: $000000DB VOL: 0
 ;PCODE: $000000DC VOL: 0
 ;PCODE: $000000DD VOL: 0
-; 0000 0059         }
 ;PCODE: $000000DE VOL: 0
 ;PCODE: $000000DF VOL: 0
 ;PCODE: $000000E0 VOL: 0
 ;PCODE: $000000E1 VOL: 0
 ;PCODE: $000000E2 VOL: 0
 ;PCODE: $000000E3 VOL: 0
-; 0000 005A     }
 ;PCODE: $000000E4 VOL: 0
 ;PCODE: $000000E5 VOL: 0
 ;PCODE: $000000E6 VOL: 0
-; 0000 005B }
+; 0000 0034 }
 ;PCODE: $000000E7 VOL: 0
 ;PCODE: $000000E8 VOL: 0
 ;PCODE: $000000E9 VOL: 0
+;PCODE: $000000EA VOL: 0
+;
+;// Turn off all segments of the 7-segment LED
+;void turn_off_segments()
+; 0000 0038 {
+;PCODE: $000000EB VOL: 0
+;PCODE: $000000EC VOL: 0
+; 0000 0039       LEDa = 0; LEDb = 0; LEDc = 0; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0;
+;PCODE: $000000ED VOL: 0
+;PCODE: $000000EE VOL: 0
+;PCODE: $000000EF VOL: 0
+;PCODE: $000000F0 VOL: 0
+;PCODE: $000000F1 VOL: 0
+;PCODE: $000000F2 VOL: 0
+;PCODE: $000000F3 VOL: 0
+;PCODE: $000000F4 VOL: 0
+;PCODE: $000000F5 VOL: 0
+;PCODE: $000000F6 VOL: 0
+;PCODE: $000000F7 VOL: 0
+;PCODE: $000000F8 VOL: 0
+;PCODE: $000000F9 VOL: 0
+;PCODE: $000000FA VOL: 0
+; 0000 003A }
+;PCODE: $000000FB VOL: 0
+;PCODE: $000000FC VOL: 0
+;
+;void main(void)
+; 0000 003D {
+;PCODE: $000000FD VOL: 0
+; 0000 003E     // Crystal Oscillator division factor: 1
+; 0000 003F     #pragma optsize-
+; 0000 0040     CLKPR = (1<<CLKPCE);
+;PCODE: $000000FE VOL: 0
+;PCODE: $000000FF VOL: 0
+; 0000 0041     CLKPR = (0<<CLKPCE) | (0<<CLKPS3) | (0<<CLKPS2) | (0<<CLKPS1) | (0<<CLKPS0);
+;PCODE: $00000100 VOL: 0
+;PCODE: $00000101 VOL: 0
+; 0000 0042     #ifdef _OPTIMIZE_SIZE_
+; 0000 0043     #pragma optsize+
+; 0000 0044     #endif
+; 0000 0045 
+; 0000 0046     DDRD = 0x60;  // PD5, PD6 as outputs
+;PCODE: $00000102 VOL: 0
+;PCODE: $00000103 VOL: 0
+; 0000 0047     DDRB = 0x1F;  // PB0..PB4 as outputs
+;PCODE: $00000104 VOL: 0
+;PCODE: $00000105 VOL: 0
+; 0000 0048 
+; 0000 0049     Display7SEGMENT(20); // Turn on all segments
+;PCODE: $00000106 VOL: 0
+;PCODE: $00000107 VOL: 0
+; 0000 004A     delay_ms(1000);     // Wait for 1000 ms
+;PCODE: $00000108 VOL: 0
+;PCODE: $00000109 VOL: 0
+; 0000 004B 
+; 0000 004C     while (1)
+;PCODE: $0000010A VOL: 0
+; 0000 004D     {
+; 0000 004E         for (i = 0; i < 10; i++)
+;PCODE: $0000010B VOL: 0
+;PCODE: $0000010C VOL: 0
+;PCODE: $0000010D VOL: 0
+;PCODE: $0000010E VOL: 0
+;PCODE: $0000010F VOL: 0
+;PCODE: $00000110 VOL: 0
+;PCODE: $00000111 VOL: 0
+; 0000 004F         {
+; 0000 0050             Display7SEGMENT(i); // Display digits 0 to 9
+;PCODE: $00000112 VOL: 0
+;PCODE: $00000113 VOL: 0
+; 0000 0051             delay_ms(200);     // Wait for 200 ms
+;PCODE: $00000114 VOL: 0
+;PCODE: $00000115 VOL: 0
+;PCODE: $00000116 VOL: 0
+; 0000 0052         }
+;PCODE: $00000117 VOL: 0
+;PCODE: $00000118 VOL: 0
+;PCODE: $00000119 VOL: 0
+;PCODE: $0000011A VOL: 0
+; 0000 0053         Display7SEGMENT(16); // Turn off all segments
+;PCODE: $0000011B VOL: 0
+;PCODE: $0000011C VOL: 0
+; 0000 0054         delay_ms(500);     // Wait for 500 ms
+;PCODE: $0000011D VOL: 0
+;PCODE: $0000011E VOL: 0
+; 0000 0055     }
+;PCODE: $0000011F VOL: 0
+;PCODE: $00000120 VOL: 0
+; 0000 0056 }
+;PCODE: $00000121 VOL: 0
+;PCODE: $00000122 VOL: 0
+;PCODE: $00000123 VOL: 0

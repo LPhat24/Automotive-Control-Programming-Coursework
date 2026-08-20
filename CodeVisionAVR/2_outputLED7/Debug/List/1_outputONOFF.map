@@ -9,10 +9,10 @@ Variable                                                                        
 Register Allocation
 Variable                                                                          Register  Size
 ------------------------------------------------------------------------------------------------
+i                                                                                 R4           1
 
 FLASH Allocation [words]
 Function                                                                          Address   Size
 ------------------------------------------------------------------------------------------------
-display_digit                                                                     0x00074     58
-turn_off_segments                                                                 0x000AE      8
-main                                                                              0x000B6     59
+Display7SEGMENT                                                                   0x00051     99
+main                                                                              0x000B4     36

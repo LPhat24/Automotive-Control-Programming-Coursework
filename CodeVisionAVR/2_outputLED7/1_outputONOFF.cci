@@ -1,4 +1,4 @@
-VERSION:3 SOURCE_TIMESTAMP:5D146D6E
+VERSION:3 SOURCE_TIMESTAMP:5D1472DB
 NODE:I LEVEL:0 LINE:1 "D:\Work\Programming\AVR Series\CodeVisionAVR\inc\mega328p.h"
 NODE:I LEVEL:0 LINE:2 "D:\Work\Programming\AVR Series\CodeVisionAVR\inc\delay.h"
 NODE:M LEVEL:0 LINE:5 "LEDa"
@@ -9,6 +9,7 @@ NODE:M LEVEL:0 LINE:9 "LEDe"
 NODE:M LEVEL:0 LINE:10 "LEDf"
 NODE:M LEVEL:0 LINE:11 "LEDg"
 NODE:C LEVEL:0 LINE:14 "digit -> FLASH"
-NODE:F LEVEL:0 LINE:28 "display_digit(unsigned char num)"
-NODE:F LEVEL:0 LINE:40 "turn_off_segments(void)"
-NODE:F LEVEL:0 LINE:51 "main(void)"
+NODE:V LEVEL:0 LINE:27 "i -> R4"
+NODE:F LEVEL:0 LINE:30 "Display7SEGMENT(unsigned char num)"
+NODE:F LEVEL:0 LINE:55 "turn_off_segments(void)"
+NODE:F LEVEL:0 LINE:60 "main(void)"

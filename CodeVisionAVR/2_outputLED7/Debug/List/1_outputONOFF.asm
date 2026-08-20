@@ -1086,6 +1086,9 @@ __DELAY_USW_LOOP:
 	ADD  R31,R0
 	.ENDM
 
+;NAME DEFINITIONS FOR GLOBAL VARIABLES ALLOCATED TO REGISTERS
+	.DEF _i=R4
+
 ;GPIOR0 INITIALIZATION VALUE
 	.EQU __GPIOR0_INIT=0x00
 
@@ -1122,17 +1125,6 @@ __START_OF_CODE:
 	JMP  0x00
 	JMP  0x00
 	JMP  0x00
-
-_digit:
-	.DB  0x1,0x1,0x1,0x1,0x1,0x1,0x0,0x0
-	.DB  0x1,0x1,0x0,0x0,0x0,0x0,0x1,0x1
-	.DB  0x0,0x1,0x1,0x0,0x1,0x1,0x1,0x1
-	.DB  0x1,0x0,0x0,0x1,0x0,0x1,0x1,0x0
-	.DB  0x0,0x1,0x1,0x1,0x0,0x1,0x1,0x0
-	.DB  0x1,0x1,0x1,0x0,0x1,0x1,0x1,0x1
-	.DB  0x1,0x1,0x1,0x1,0x0,0x0,0x0,0x0
-	.DB  0x1,0x1,0x1,0x1,0x1,0x1,0x1,0x1
-	.DB  0x1,0x1,0x1,0x0,0x1,0x1
 
 __RESET:
 	CLI
@@ -1224,245 +1216,238 @@ __CLEAR_SRAM:
 ;    {1,1,1,1,0,1,1}, // 9
 ;};
 ;
+;unsigned char i;  // Variable to hold the current digit to display
+;
 ;// Function to display a digit on the 7-segment LED
-;void display_digit(unsigned char num)
-; 0000 001D {
+;void Display7SEGMENT(unsigned char num)
+; 0000 001F {
 
 	.CSEG
-_display_digit:
-; .FSTART _display_digit
-; 0000 001E     LEDa = digit[num][0];
+_Display7SEGMENT:
+; .FSTART _Display7SEGMENT
+; 0000 0020 //     LEDa = digit[num][0];
+; 0000 0021 //     LEDb = digit[num][1];
+; 0000 0022 //     LEDc = digit[num][2];
+; 0000 0023 //     LEDd = digit[num][3];
+; 0000 0024 //     LEDe = digit[num][4];
+; 0000 0025 //     LEDf = digit[num][5];
+; 0000 0026 //     LEDg = digit[num][6];
+; 0000 0027     if (num == 0 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 0; }
 	ST   -Y,R26
 ;	num -> Y+0
-	RCALL SUBOPT_0x0
-	LPM  R30,Z
+	LD   R30,Y
 	CPI  R30,0
 	BRNE _0x3
-	CBI  0xB,6
-	RJMP _0x4
-_0x3:
-	SBI  0xB,6
-_0x4:
-; 0000 001F     LEDb = digit[num][1];
 	RCALL SUBOPT_0x0
-	ADIW R30,1
-	LPM  R30,Z
-	CPI  R30,0
-	BRNE _0x5
-	CBI  0x5,0
-	RJMP _0x6
-_0x5:
-	SBI  0x5,0
-_0x6:
-; 0000 0020     LEDc = digit[num][2];
-	RCALL SUBOPT_0x0
-	ADIW R30,2
-	LPM  R30,Z
-	CPI  R30,0
-	BRNE _0x7
-	CBI  0x5,1
-	RJMP _0x8
-_0x7:
-	SBI  0x5,1
-_0x8:
-; 0000 0021     LEDd = digit[num][3];
-	RCALL SUBOPT_0x0
-	ADIW R30,3
-	LPM  R30,Z
-	CPI  R30,0
-	BRNE _0x9
-	CBI  0xB,5
-	RJMP _0xA
-_0x9:
-	SBI  0xB,5
-_0xA:
-; 0000 0022     LEDe = digit[num][4];
-	RCALL SUBOPT_0x0
-	ADIW R30,4
-	LPM  R30,Z
-	CPI  R30,0
-	BRNE _0xB
-	CBI  0x5,2
-	RJMP _0xC
-_0xB:
 	SBI  0x5,2
-_0xC:
-; 0000 0023     LEDf = digit[num][5];
-	RCALL SUBOPT_0x0
-	ADIW R30,5
-	LPM  R30,Z
-	CPI  R30,0
-	BRNE _0xD
-	CBI  0x5,3
-	RJMP _0xE
-_0xD:
 	SBI  0x5,3
-_0xE:
-; 0000 0024     LEDg = digit[num][6];
-	RCALL SUBOPT_0x0
-	ADIW R30,6
-	LPM  R30,Z
-	CPI  R30,0
-	BRNE _0xF
 	CBI  0x5,4
-	RJMP _0x10
-_0xF:
+; 0000 0028     if (num == 1 ) { LEDa = 0; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
+_0x3:
+	LD   R26,Y
+	CPI  R26,LOW(0x1)
+	BRNE _0x12
+	CBI  0xB,6
+	RCALL SUBOPT_0x1
+	CBI  0x5,3
+	CBI  0x5,4
+; 0000 0029     if (num == 2 ) { LEDa = 1; LEDb = 1; LEDc = 0; LEDd = 1; LEDe = 1; LEDf = 0; LEDg = 1; }
+_0x12:
+	LD   R26,Y
+	CPI  R26,LOW(0x2)
+	BRNE _0x21
+	SBI  0xB,6
+	SBI  0x5,0
+	CBI  0x5,1
+	SBI  0xB,5
+	SBI  0x5,2
+	CBI  0x5,3
 	SBI  0x5,4
-_0x10:
-; 0000 0025 }
+; 0000 002A     if (num == 3 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 0; LEDg = 1; }
+_0x21:
+	LD   R26,Y
+	CPI  R26,LOW(0x3)
+	BRNE _0x30
+	RCALL SUBOPT_0x0
+	CBI  0x5,2
+	CBI  0x5,3
+	SBI  0x5,4
+; 0000 002B     if (num == 4 ) { LEDa = 0; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 1; LEDg = 1; }
+_0x30:
+	LD   R26,Y
+	CPI  R26,LOW(0x4)
+	BRNE _0x3F
+	CBI  0xB,6
+	RCALL SUBOPT_0x1
+	SBI  0x5,3
+	SBI  0x5,4
+; 0000 002C     if (num == 5 ) { LEDa = 1; LEDb = 0; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 1; LEDg = 1; }
+_0x3F:
+	LD   R26,Y
+	CPI  R26,LOW(0x5)
+	BRNE _0x4E
+	SBI  0xB,6
+	CBI  0x5,0
+	SBI  0x5,1
+	SBI  0xB,5
+	CBI  0x5,2
+	SBI  0x5,3
+	SBI  0x5,4
+; 0000 002D     if (num == 6 ) { LEDa = 1; LEDb = 0; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
+_0x4E:
+	LD   R26,Y
+	CPI  R26,LOW(0x6)
+	BRNE _0x5D
+	SBI  0xB,6
+	CBI  0x5,0
+	SBI  0x5,1
+	SBI  0xB,5
+	SBI  0x5,2
+	SBI  0x5,3
+	SBI  0x5,4
+; 0000 002E     if (num == 7 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
+_0x5D:
+	LD   R26,Y
+	CPI  R26,LOW(0x7)
+	BRNE _0x6C
+	SBI  0xB,6
+	RCALL SUBOPT_0x1
+	CBI  0x5,3
+	CBI  0x5,4
+; 0000 002F     if (num == 8 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
+_0x6C:
+	LD   R26,Y
+	CPI  R26,LOW(0x8)
+	BRNE _0x7B
+	RCALL SUBOPT_0x0
+	SBI  0x5,2
+	SBI  0x5,3
+	SBI  0x5,4
+; 0000 0030     if (num == 9 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 1; LEDg = 1; }
+_0x7B:
+	LD   R26,Y
+	CPI  R26,LOW(0x9)
+	BRNE _0x8A
+	RCALL SUBOPT_0x0
+	CBI  0x5,2
+	SBI  0x5,3
+	SBI  0x5,4
+; 0000 0031 
+; 0000 0032     if (num == 16) { LEDa = 0; LEDb = 0; LEDc = 0; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
+_0x8A:
+	LD   R26,Y
+	CPI  R26,LOW(0x10)
+	BRNE _0x99
+	CBI  0xB,6
+	CBI  0x5,0
+	CBI  0x5,1
+	CBI  0xB,5
+	CBI  0x5,2
+	CBI  0x5,3
+	CBI  0x5,4
+; 0000 0033     if (num == 20) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
+_0x99:
+	LD   R26,Y
+	CPI  R26,LOW(0x14)
+	BRNE _0xA8
+	RCALL SUBOPT_0x0
+	SBI  0x5,2
+	SBI  0x5,3
+	SBI  0x5,4
+; 0000 0034 }
+_0xA8:
 	ADIW R28,1
 	RET
 ; .FEND
 ;
 ;// Turn off all segments of the 7-segment LED
 ;void turn_off_segments()
-; 0000 0029 {
-_turn_off_segments:
-; .FSTART _turn_off_segments
-; 0000 002A       LEDa = 0;
-	CBI  0xB,6
-; 0000 002B       LEDb = 0;
-	CBI  0x5,0
-; 0000 002C       LEDc = 0;
-	CBI  0x5,1
-; 0000 002D       LEDd = 0;
-	CBI  0xB,5
-; 0000 002E       LEDe = 0;
-	CBI  0x5,2
-; 0000 002F       LEDf = 0;
-	CBI  0x5,3
-; 0000 0030       LEDg = 0;
-	CBI  0x5,4
-; 0000 0031 }
-	RET
-; .FEND
+; 0000 0038 {
+; 0000 0039       LEDa = 0; LEDb = 0; LEDc = 0; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0;
+; 0000 003A }
 ;
 ;void main(void)
-; 0000 0034 {
+; 0000 003D {
 _main:
 ; .FSTART _main
-; 0000 0035     // Crystal Oscillator division factor: 1
-; 0000 0036     #pragma optsize-
-; 0000 0037     CLKPR = (1<<CLKPCE);
+; 0000 003E     // Crystal Oscillator division factor: 1
+; 0000 003F     #pragma optsize-
+; 0000 0040     CLKPR = (1<<CLKPCE);
 	LDI  R30,LOW(128)
 	STS  97,R30
-; 0000 0038     CLKPR = (0<<CLKPCE) | (0<<CLKPS3) | (0<<CLKPS2) | (0<<CLKPS1) | (0<<CLKPS0);
+; 0000 0041     CLKPR = (0<<CLKPCE) | (0<<CLKPS3) | (0<<CLKPS2) | (0<<CLKPS1) | (0<<CLKPS0);
 	LDI  R30,LOW(0)
 	STS  97,R30
-; 0000 0039     #ifdef _OPTIMIZE_SIZE_
-; 0000 003A     #pragma optsize+
-; 0000 003B     #endif
-; 0000 003C 
-; 0000 003D     DDRD = 0x60;  // PD5, PD6 as outputs
+; 0000 0042     #ifdef _OPTIMIZE_SIZE_
+; 0000 0043     #pragma optsize+
+; 0000 0044     #endif
+; 0000 0045 
+; 0000 0046     DDRD = 0x60;  // PD5, PD6 as outputs
 	LDI  R30,LOW(96)
 	OUT  0xA,R30
-; 0000 003E     DDRB = 0x1F;  // PB0..PB4 as outputs
+; 0000 0047     DDRB = 0x1F;  // PB0..PB4 as outputs
 	LDI  R30,LOW(31)
 	OUT  0x4,R30
-; 0000 003F 
-; 0000 0040     while (1)
-_0x1F:
-; 0000 0041     {
-; 0000 0042         unsigned char d, i;
-; 0000 0043         for (d = 0; d < 10; d++)  // Cycle 0..9
-	SBIW R28,2
-;	d -> Y+1
-;	i -> Y+0
-	LDI  R30,LOW(0)
-	STD  Y+1,R30
-_0x23:
-	LDD  R26,Y+1
-	CPI  R26,LOW(0xA)
-	BRSH _0x24
-; 0000 0044         {
-; 0000 0045             display_digit(d);
-	RCALL _display_digit
-; 0000 0046             delay_ms(200);        // 200 ms per digit
+; 0000 0048 
+; 0000 0049     Display7SEGMENT(20); // Turn on all segments
+	LDI  R26,LOW(20)
+	RCALL _Display7SEGMENT
+; 0000 004A     delay_ms(1000);     // Wait for 1000 ms
+	LDI  R26,LOW(1000)
+	LDI  R27,HIGH(1000)
+	CALL _delay_ms
+; 0000 004B 
+; 0000 004C     while (1)
+_0xC5:
+; 0000 004D     {
+; 0000 004E         for (i = 0; i < 10; i++)
+	CLR  R4
+_0xC9:
+	LDI  R30,LOW(10)
+	CP   R4,R30
+	BRSH _0xCA
+; 0000 004F         {
+; 0000 0050             Display7SEGMENT(i); // Display digits 0 to 9
+	MOV  R26,R4
+	RCALL _Display7SEGMENT
+; 0000 0051             delay_ms(200);     // Wait for 200 ms
 	LDI  R26,LOW(200)
 	LDI  R27,0
 	CALL _delay_ms
-; 0000 0047         }
-	LDD  R30,Y+1
-	SUBI R30,-LOW(1)
-	STD  Y+1,R30
-	RJMP _0x23
-_0x24:
-; 0000 0048         turn_off_segments();  // Turn off all segments
-	RCALL _turn_off_segments
-; 0000 0049         delay_ms(500);
+; 0000 0052         }
+	INC  R4
+	RJMP _0xC9
+_0xCA:
+; 0000 0053         Display7SEGMENT(16); // Turn off all segments
+	LDI  R26,LOW(16)
+	RCALL _Display7SEGMENT
+; 0000 0054         delay_ms(500);     // Wait for 500 ms
 	LDI  R26,LOW(500)
 	LDI  R27,HIGH(500)
 	CALL _delay_ms
-; 0000 004A 
-; 0000 004B         // Police flash after each full cycle
-; 0000 004C         for (i = 0; i < 3; i++)   // Light A (PD5) 3 times
-	LDI  R30,LOW(0)
-	ST   Y,R30
-_0x26:
-	LD   R26,Y
-	CPI  R26,LOW(0x3)
-	BRSH _0x27
-; 0000 004D         {
-; 0000 004E             LEDd = 1;
-	SBI  0xB,5
-; 0000 004F             delay_ms(70);
-	RCALL SUBOPT_0x1
-; 0000 0050             LEDd = 0;
-	CBI  0xB,5
-; 0000 0051             delay_ms(70);
-	RCALL SUBOPT_0x1
-; 0000 0052         }
-	LD   R30,Y
-	SUBI R30,-LOW(1)
-	ST   Y,R30
-	RJMP _0x26
-_0x27:
-; 0000 0053         for (i = 0; i < 3; i++)   // Light B (PD6) 3 times
-	LDI  R30,LOW(0)
-	ST   Y,R30
-_0x2D:
-	LD   R26,Y
-	CPI  R26,LOW(0x3)
-	BRSH _0x2E
-; 0000 0054         {
-; 0000 0055             LEDa = 1;
-	SBI  0xB,6
-; 0000 0056             delay_ms(70);
-	RCALL SUBOPT_0x1
-; 0000 0057             LEDa = 0;
-	CBI  0xB,6
-; 0000 0058             delay_ms(70);
-	RCALL SUBOPT_0x1
-; 0000 0059         }
-	LD   R30,Y
-	SUBI R30,-LOW(1)
-	ST   Y,R30
-	RJMP _0x2D
-_0x2E:
-; 0000 005A     }
-	ADIW R28,2
-	RJMP _0x1F
-; 0000 005B }
-_0x33:
-	RJMP _0x33
+; 0000 0055     }
+	RJMP _0xC5
+; 0000 0056 }
+_0xCB:
+	RJMP _0xCB
 ; .FEND
 
 	.CSEG
-;OPTIMIZER ADDED SUBROUTINE, CALLED 7 TIMES, CODE SIZE REDUCTION:21 WORDS
+;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:5 WORDS
 SUBOPT_0x0:
-	LD   R30,Y
-	LDI  R26,LOW(7)
-	MUL  R30,R26
-	MOVW R30,R0
-	SUBI R30,LOW(-_digit*2)
-	SBCI R31,HIGH(-_digit*2)
+	SBI  0xB,6
+	SBI  0x5,0
+	SBI  0x5,1
+	SBI  0xB,5
 	RET
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 4 TIMES, CODE SIZE REDUCTION:3 WORDS
+;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:1 WORDS
 SUBOPT_0x1:
-	LDI  R26,LOW(70)
-	LDI  R27,0
-	JMP  _delay_ms
+	SBI  0x5,0
+	SBI  0x5,1
+	CBI  0xB,5
+	CBI  0x5,2
+	RET
 
 
 	.CSEG
