@@ -50,23 +50,25 @@
 ;//------------------------------------------------------------------------------------------
 ;unsigned char nutSW1, nutSW2, nutSW1truoc, nutSW2truoc;  // Variables to hold the state of the switches
 ;unsigned char demNut1; // Variable to hold the count of button presses for switch 1 and switch 2
+;unsigned char nutPower, nutPowerTruoc; // PORTC.0 button state + previous state
+;unsigned char trangThai = 0;           // 0 = system OFF, 1 = system ON
 ;//------------------------------------------------------------------------------------------
 ;
 ;// Function to display a digit on the 7-segment LED
 ;void Display7SEGMENT(unsigned char num)
-; 0000 0021 {
+; 0000 0023 {
 
 	.CSEG
 ;PCODE: $0000000D VOL: 0
 ;PCODE: $0000000E VOL: 0
-; 0000 0022 //     LEDa = digit[num][0];
-; 0000 0023 //     LEDb = digit[num][1];
-; 0000 0024 //     LEDc = digit[num][2];
-; 0000 0025 //     LEDd = digit[num][3];
-; 0000 0026 //     LEDe = digit[num][4];
-; 0000 0027 //     LEDf = digit[num][5];
-; 0000 0028 //     LEDg = digit[num][6];
-; 0000 0029     if (num == 0 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 0; }
+; 0000 0024 //     LEDa = digit[num][0];
+; 0000 0025 //     LEDb = digit[num][1];
+; 0000 0026 //     LEDc = digit[num][2];
+; 0000 0027 //     LEDd = digit[num][3];
+; 0000 0028 //     LEDe = digit[num][4];
+; 0000 0029 //     LEDf = digit[num][5];
+; 0000 002A //     LEDg = digit[num][6];
+; 0000 002B     if (num == 0 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 0; }
 ;PCODE: $0000000F VOL: 0
 ;	num -> Y+0
 ;PCODE: $00000010 VOL: 0
@@ -86,7 +88,7 @@
 ;PCODE: $0000001E VOL: 0
 ;PCODE: $0000001F VOL: 0
 ;PCODE: $00000020 VOL: 0
-; 0000 002A     if (num == 1 ) { LEDa = 0; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
+; 0000 002C     if (num == 1 ) { LEDa = 0; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
 ;PCODE: $00000021 VOL: 0
 ;PCODE: $00000022 VOL: 0
 ;PCODE: $00000023 VOL: 0
@@ -105,7 +107,7 @@
 ;PCODE: $00000030 VOL: 0
 ;PCODE: $00000031 VOL: 0
 ;PCODE: $00000032 VOL: 0
-; 0000 002B     if (num == 2 ) { LEDa = 1; LEDb = 1; LEDc = 0; LEDd = 1; LEDe = 1; LEDf = 0; LEDg = 1; }
+; 0000 002D     if (num == 2 ) { LEDa = 1; LEDb = 1; LEDc = 0; LEDd = 1; LEDe = 1; LEDf = 0; LEDg = 1; }
 ;PCODE: $00000033 VOL: 0
 ;PCODE: $00000034 VOL: 0
 ;PCODE: $00000035 VOL: 0
@@ -124,7 +126,7 @@
 ;PCODE: $00000042 VOL: 0
 ;PCODE: $00000043 VOL: 0
 ;PCODE: $00000044 VOL: 0
-; 0000 002C     if (num == 3 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 0; LEDg = 1; }
+; 0000 002E     if (num == 3 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 0; LEDg = 1; }
 ;PCODE: $00000045 VOL: 0
 ;PCODE: $00000046 VOL: 0
 ;PCODE: $00000047 VOL: 0
@@ -143,7 +145,7 @@
 ;PCODE: $00000054 VOL: 0
 ;PCODE: $00000055 VOL: 0
 ;PCODE: $00000056 VOL: 0
-; 0000 002D     if (num == 4 ) { LEDa = 0; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 1; LEDg = 1; }
+; 0000 002F     if (num == 4 ) { LEDa = 0; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 1; LEDg = 1; }
 ;PCODE: $00000057 VOL: 0
 ;PCODE: $00000058 VOL: 0
 ;PCODE: $00000059 VOL: 0
@@ -162,7 +164,7 @@
 ;PCODE: $00000066 VOL: 0
 ;PCODE: $00000067 VOL: 0
 ;PCODE: $00000068 VOL: 0
-; 0000 002E     if (num == 5 ) { LEDa = 1; LEDb = 0; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 1; LEDg = 1; }
+; 0000 0030     if (num == 5 ) { LEDa = 1; LEDb = 0; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 1; LEDg = 1; }
 ;PCODE: $00000069 VOL: 0
 ;PCODE: $0000006A VOL: 0
 ;PCODE: $0000006B VOL: 0
@@ -181,7 +183,7 @@
 ;PCODE: $00000078 VOL: 0
 ;PCODE: $00000079 VOL: 0
 ;PCODE: $0000007A VOL: 0
-; 0000 002F     if (num == 6 ) { LEDa = 1; LEDb = 0; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
+; 0000 0031     if (num == 6 ) { LEDa = 1; LEDb = 0; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
 ;PCODE: $0000007B VOL: 0
 ;PCODE: $0000007C VOL: 0
 ;PCODE: $0000007D VOL: 0
@@ -200,7 +202,7 @@
 ;PCODE: $0000008A VOL: 0
 ;PCODE: $0000008B VOL: 0
 ;PCODE: $0000008C VOL: 0
-; 0000 0030     if (num == 7 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
+; 0000 0032     if (num == 7 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
 ;PCODE: $0000008D VOL: 0
 ;PCODE: $0000008E VOL: 0
 ;PCODE: $0000008F VOL: 0
@@ -219,7 +221,7 @@
 ;PCODE: $0000009C VOL: 0
 ;PCODE: $0000009D VOL: 0
 ;PCODE: $0000009E VOL: 0
-; 0000 0031     if (num == 8 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
+; 0000 0033     if (num == 8 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
 ;PCODE: $0000009F VOL: 0
 ;PCODE: $000000A0 VOL: 0
 ;PCODE: $000000A1 VOL: 0
@@ -238,7 +240,7 @@
 ;PCODE: $000000AE VOL: 0
 ;PCODE: $000000AF VOL: 0
 ;PCODE: $000000B0 VOL: 0
-; 0000 0032     if (num == 9 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 1; LEDg = 1; }
+; 0000 0034     if (num == 9 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 1; LEDg = 1; }
 ;PCODE: $000000B1 VOL: 0
 ;PCODE: $000000B2 VOL: 0
 ;PCODE: $000000B3 VOL: 0
@@ -257,8 +259,8 @@
 ;PCODE: $000000C0 VOL: 0
 ;PCODE: $000000C1 VOL: 0
 ;PCODE: $000000C2 VOL: 0
-; 0000 0033 
-; 0000 0034     if (num == 16) { LEDa = 0; LEDb = 0; LEDc = 0; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
+; 0000 0035 
+; 0000 0036     if (num == 16) { LEDa = 0; LEDb = 0; LEDc = 0; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
 ;PCODE: $000000C3 VOL: 0
 ;PCODE: $000000C4 VOL: 0
 ;PCODE: $000000C5 VOL: 0
@@ -277,7 +279,7 @@
 ;PCODE: $000000D2 VOL: 0
 ;PCODE: $000000D3 VOL: 0
 ;PCODE: $000000D4 VOL: 0
-; 0000 0035     if (num == 20) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
+; 0000 0037     if (num == 20) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
 ;PCODE: $000000D5 VOL: 0
 ;PCODE: $000000D6 VOL: 0
 ;PCODE: $000000D7 VOL: 0
@@ -296,7 +298,7 @@
 ;PCODE: $000000E4 VOL: 0
 ;PCODE: $000000E5 VOL: 0
 ;PCODE: $000000E6 VOL: 0
-; 0000 0036 }
+; 0000 0038 }
 ;PCODE: $000000E7 VOL: 0
 ;PCODE: $000000E8 VOL: 0
 ;PCODE: $000000E9 VOL: 0
@@ -309,163 +311,220 @@
 ;// }
 ;
 ;void main(void)
-; 0000 003F {
+; 0000 0041 {
 ;PCODE: $000000EB VOL: 0
-; 0000 0040     // Crystal Oscillator division factor: 1
-; 0000 0041     #pragma optsize-
-; 0000 0042     CLKPR = (1<<CLKPCE);
+; 0000 0042     // Crystal Oscillator division factor: 1
+; 0000 0043     #pragma optsize-
+; 0000 0044     CLKPR = (1<<CLKPCE);
 ;PCODE: $000000EC VOL: 0
 ;PCODE: $000000ED VOL: 0
-; 0000 0043     CLKPR = (0<<CLKPCE) | (0<<CLKPS3) | (0<<CLKPS2) | (0<<CLKPS1) | (0<<CLKPS0);
+; 0000 0045     CLKPR = (0<<CLKPCE) | (0<<CLKPS3) | (0<<CLKPS2) | (0<<CLKPS1) | (0<<CLKPS0);
 ;PCODE: $000000EE VOL: 0
 ;PCODE: $000000EF VOL: 0
-; 0000 0044     #ifdef _OPTIMIZE_SIZE_
-; 0000 0045     #pragma optsize+
-; 0000 0046     #endif
-; 0000 0047 
-; 0000 0048     DDRD.6 = 1; // Set PORTD pin 6 as output (Segment a)
+; 0000 0046     #ifdef _OPTIMIZE_SIZE_
+; 0000 0047     #pragma optsize+
+; 0000 0048     #endif
+; 0000 0049 
+; 0000 004A     DDRD.6 = 1; // Set PORTD pin 6 as output (Segment a)
 ;PCODE: $000000F0 VOL: 0
 ;PCODE: $000000F1 VOL: 0
-; 0000 0049     DDRB.0 = 1; // Set PORTB pin 0 as output (Segment b)
+; 0000 004B     DDRB.0 = 1; // Set PORTB pin 0 as output (Segment b)
 ;PCODE: $000000F2 VOL: 0
 ;PCODE: $000000F3 VOL: 0
-; 0000 004A     DDRB.1 = 1; // Set PORTB pin 1 as output (Segment c)
+; 0000 004C     DDRB.1 = 1; // Set PORTB pin 1 as output (Segment c)
 ;PCODE: $000000F4 VOL: 0
 ;PCODE: $000000F5 VOL: 0
-; 0000 004B     DDRD.5 = 1; // Set PORTD pin 5 as output (Segment d)
+; 0000 004D     DDRD.5 = 1; // Set PORTD pin 5 as output (Segment d)
 ;PCODE: $000000F6 VOL: 0
 ;PCODE: $000000F7 VOL: 0
-; 0000 004C     DDRB.2 = 1; // Set PORTB pin 2 as output (Segment e)
+; 0000 004E     DDRB.2 = 1; // Set PORTB pin 2 as output (Segment e)
 ;PCODE: $000000F8 VOL: 0
 ;PCODE: $000000F9 VOL: 0
-; 0000 004D     DDRB.3 = 1; // Set PORTB pin 3 as output (Segment f)
+; 0000 004F     DDRB.3 = 1; // Set PORTB pin 3 as output (Segment f)
 ;PCODE: $000000FA VOL: 0
 ;PCODE: $000000FB VOL: 0
-; 0000 004E     DDRB.4 = 1; // Set PORTB pin 4 as output (Segment g)
+; 0000 0050     DDRB.4 = 1; // Set PORTB pin 4 as output (Segment g)
 ;PCODE: $000000FC VOL: 0
 ;PCODE: $000000FD VOL: 0
-; 0000 004F 
-; 0000 0050     DDRD.4 = 0; // Set PORTD pin 4 as input (LED ON/OFF control)
+; 0000 0051 
+; 0000 0052     DDRD.4 = 0; // Set PORTD pin 4 as input (LED ON/OFF control)
 ;PCODE: $000000FE VOL: 0
 ;PCODE: $000000FF VOL: 0
-; 0000 0051     PORTD.4 = 1; // Enable pull-up resistor on PORTD pin 4
+; 0000 0053     PORTD.4 = 1; // Enable pull-up resistor on PORTD pin 4
 ;PCODE: $00000100 VOL: 0
 ;PCODE: $00000101 VOL: 0
-; 0000 0052     DDRD.7 = 0; // Set PORTD pin 7 as input (LED ON/OFF control)
+; 0000 0054     DDRD.7 = 0; // Set PORTD pin 7 as input (LED ON/OFF control)
 ;PCODE: $00000102 VOL: 0
 ;PCODE: $00000103 VOL: 0
-; 0000 0053     PORTD.7 = 1; // Enable pull-up resistor on PORTD pin 7
+; 0000 0055     PORTD.7 = 1; // Enable pull-up resistor on PORTD pin 7
 ;PCODE: $00000104 VOL: 0
 ;PCODE: $00000105 VOL: 0
-; 0000 0054 
-; 0000 0055     Display7SEGMENT(20); // Turn on all segments
+; 0000 0056 
+; 0000 0057     DDRC.0 = 0; // Set PORTC pin 0 as input (power button)
 ;PCODE: $00000106 VOL: 0
 ;PCODE: $00000107 VOL: 0
-; 0000 0056     delay_ms(1000);     // Wait for 1000 ms
+; 0000 0058     PORTC.0 = 1; // Enable pull-up resistor on PORTC pin 0
 ;PCODE: $00000108 VOL: 0
 ;PCODE: $00000109 VOL: 0
-; 0000 0057     Display7SEGMENT(16); // Turn off all segments
+; 0000 0059 
+; 0000 005A     Display7SEGMENT(20); // Turn on all segments
 ;PCODE: $0000010A VOL: 0
 ;PCODE: $0000010B VOL: 0
-; 0000 0058     delay_ms(500);     // Wait for 500 ms
+; 0000 005B     delay_ms(1000);     // Wait for 1000 ms
 ;PCODE: $0000010C VOL: 0
 ;PCODE: $0000010D VOL: 0
-; 0000 0059 
-; 0000 005A     nutSW1 = PIND.4; // Read the state of switch 1 (PORTD pin 4)
+; 0000 005C     Display7SEGMENT(16); // Turn off all segments
 ;PCODE: $0000010E VOL: 0
 ;PCODE: $0000010F VOL: 0
+; 0000 005D     delay_ms(500);     // Wait for 500 ms
 ;PCODE: $00000110 VOL: 0
-; 0000 005B     nutSW2 = PIND.7; // Read the state of switch 2 (PORTD pin 7)
 ;PCODE: $00000111 VOL: 0
+; 0000 005E 
+; 0000 005F     nutSW1 = PIND.4; // Read the state of switch 1 (PORTD pin 4)
 ;PCODE: $00000112 VOL: 0
 ;PCODE: $00000113 VOL: 0
-; 0000 005C     nutSW1truoc = nutSW1; // Store the initial state of switch 1
 ;PCODE: $00000114 VOL: 0
+; 0000 0060     nutSW2 = PIND.7; // Read the state of switch 2 (PORTD pin 7)
 ;PCODE: $00000115 VOL: 0
-; 0000 005D     nutSW2truoc = nutSW2; // Store the initial state of switch 2
 ;PCODE: $00000116 VOL: 0
 ;PCODE: $00000117 VOL: 0
-; 0000 005E 
-; 0000 005F     while (1)
+; 0000 0061     nutSW1truoc = nutSW1; // Store the initial state of switch 1
 ;PCODE: $00000118 VOL: 0
-; 0000 0060     {
-; 0000 0061         nutSW1truoc = nutSW1; // Store the previous state of switch 1
 ;PCODE: $00000119 VOL: 0
+; 0000 0062     nutSW2truoc = nutSW2; // Store the initial state of switch 2
 ;PCODE: $0000011A VOL: 0
-; 0000 0062         nutSW2truoc = nutSW2; // Store the previous state of switch 2
 ;PCODE: $0000011B VOL: 0
+; 0000 0063     nutPower = PINC.0; // Read the initial state of the power button (PORTC pin 0)
 ;PCODE: $0000011C VOL: 0
-; 0000 0063         nutSW1 = PIND.4; // Read the state of switch 1 (PORTD pin 4)
 ;PCODE: $0000011D VOL: 0
 ;PCODE: $0000011E VOL: 0
+; 0000 0064     nutPowerTruoc = nutPower; // Store the initial state of the power button
 ;PCODE: $0000011F VOL: 0
-; 0000 0064         nutSW2 = PIND.7; // Read the state of switch 2 (PORTD pin 7)
 ;PCODE: $00000120 VOL: 0
-;PCODE: $00000121 VOL: 0
-;PCODE: $00000122 VOL: 0
 ; 0000 0065 
-; 0000 0066         if (nutSW2 == 0 && nutSW2truoc == 1) // If PORTD pin 7 is LOW (button pressed) and was HIGH before
+; 0000 0066     while (1)
+;PCODE: $00000121 VOL: 0
+; 0000 0067     {
+; 0000 0068         nutSW1truoc = nutSW1; // Store the previous state of switch 1
+;PCODE: $00000122 VOL: 0
 ;PCODE: $00000123 VOL: 0
+; 0000 0069         nutSW2truoc = nutSW2; // Store the previous state of switch 2
 ;PCODE: $00000124 VOL: 0
 ;PCODE: $00000125 VOL: 0
+; 0000 006A         nutSW1 = PIND.4; // Read the state of switch 1 (PORTD pin 4)
 ;PCODE: $00000126 VOL: 0
 ;PCODE: $00000127 VOL: 0
 ;PCODE: $00000128 VOL: 0
+; 0000 006B         nutSW2 = PIND.7; // Read the state of switch 2 (PORTD pin 7)
 ;PCODE: $00000129 VOL: 0
 ;PCODE: $0000012A VOL: 0
 ;PCODE: $0000012B VOL: 0
-; 0000 0067         {
-; 0000 0068             if (demNut1 == 9) demNut1 = 0; // Reset count to 0 if it exceeds 9
+; 0000 006C 
+; 0000 006D         nutPowerTruoc = nutPower; // Store the previous state of the power button
 ;PCODE: $0000012C VOL: 0
 ;PCODE: $0000012D VOL: 0
+; 0000 006E         nutPower = PINC.0; // Read the state of the power button (PORTC pin 0)
 ;PCODE: $0000012E VOL: 0
 ;PCODE: $0000012F VOL: 0
-; 0000 0069             else demNut1++; // Increment the count of button presses for switch 2
 ;PCODE: $00000130 VOL: 0
+; 0000 006F 
+; 0000 0070         if (nutPower == 0 && nutPowerTruoc == 1) // Falling edge = power button pressed
 ;PCODE: $00000131 VOL: 0
 ;PCODE: $00000132 VOL: 0
-; 0000 006A             Display7SEGMENT(demNut1); // Display the count on the 7-segment LED
 ;PCODE: $00000133 VOL: 0
 ;PCODE: $00000134 VOL: 0
 ;PCODE: $00000135 VOL: 0
-; 0000 006B         }
-; 0000 006C         if (nutSW1 == 0 && nutSW1truoc == 1) // If PORTD pin 4 is LOW (button pressed) and was HIGH before
 ;PCODE: $00000136 VOL: 0
 ;PCODE: $00000137 VOL: 0
 ;PCODE: $00000138 VOL: 0
 ;PCODE: $00000139 VOL: 0
+; 0000 0071         {
+; 0000 0072             trangThai = !trangThai;              // Latch ON <-> OFF
 ;PCODE: $0000013A VOL: 0
 ;PCODE: $0000013B VOL: 0
 ;PCODE: $0000013C VOL: 0
+; 0000 0073             if (trangThai) Display7SEGMENT(demNut1); // ON: show last count
 ;PCODE: $0000013D VOL: 0
 ;PCODE: $0000013E VOL: 0
 ;PCODE: $0000013F VOL: 0
-; 0000 006D         {
-; 0000 006E             if (demNut1 == 0) demNut1 = 9; // Reset count to 9 if it goes below 0
 ;PCODE: $00000140 VOL: 0
+; 0000 0074             else Display7SEGMENT(16);                // OFF: blank display
 ;PCODE: $00000141 VOL: 0
 ;PCODE: $00000142 VOL: 0
 ;PCODE: $00000143 VOL: 0
-; 0000 006F             else demNut1--; // Decrement the count of button presses for switch 1
 ;PCODE: $00000144 VOL: 0
+; 0000 0075         }
 ;PCODE: $00000145 VOL: 0
+; 0000 0076 
+; 0000 0077         if (trangThai) // SW1/SW2 only work when the system is ON
 ;PCODE: $00000146 VOL: 0
-; 0000 0070             Display7SEGMENT(demNut1); // Display the count on the 7-segment LED
 ;PCODE: $00000147 VOL: 0
 ;PCODE: $00000148 VOL: 0
+; 0000 0078         {
+; 0000 0079             if (nutSW2 == 0 && nutSW2truoc == 1) // If PORTD pin 7 is LOW (button pressed) and was HIGH before
 ;PCODE: $00000149 VOL: 0
-; 0000 0071         }
-; 0000 0072 
-; 0000 0073 
-; 0000 0074         delay_ms(20); // Wait for 20 ms to debounce the button press
 ;PCODE: $0000014A VOL: 0
 ;PCODE: $0000014B VOL: 0
 ;PCODE: $0000014C VOL: 0
 ;PCODE: $0000014D VOL: 0
-; 0000 0075     }
 ;PCODE: $0000014E VOL: 0
 ;PCODE: $0000014F VOL: 0
-; 0000 0076 }
 ;PCODE: $00000150 VOL: 0
 ;PCODE: $00000151 VOL: 0
+; 0000 007A             {
+; 0000 007B                 if (demNut1 == 9) demNut1 = 0; // Reset count to 0 if it exceeds 9
 ;PCODE: $00000152 VOL: 0
+;PCODE: $00000153 VOL: 0
+;PCODE: $00000154 VOL: 0
+;PCODE: $00000155 VOL: 0
+; 0000 007C                 else demNut1++; // Increment the count of button presses for switch 2
+;PCODE: $00000156 VOL: 0
+;PCODE: $00000157 VOL: 0
+;PCODE: $00000158 VOL: 0
+; 0000 007D                 Display7SEGMENT(demNut1); // Display the count on the 7-segment LED
+;PCODE: $00000159 VOL: 0
+;PCODE: $0000015A VOL: 0
+;PCODE: $0000015B VOL: 0
+; 0000 007E             }
+; 0000 007F             if (nutSW1 == 0 && nutSW1truoc == 1) // If PORTD pin 4 is LOW (button pressed) and was HIGH before
+;PCODE: $0000015C VOL: 0
+;PCODE: $0000015D VOL: 0
+;PCODE: $0000015E VOL: 0
+;PCODE: $0000015F VOL: 0
+;PCODE: $00000160 VOL: 0
+;PCODE: $00000161 VOL: 0
+;PCODE: $00000162 VOL: 0
+;PCODE: $00000163 VOL: 0
+;PCODE: $00000164 VOL: 0
+;PCODE: $00000165 VOL: 0
+; 0000 0080             {
+; 0000 0081                 if (demNut1 == 0) demNut1 = 9; // Reset count to 9 if it goes below 0
+;PCODE: $00000166 VOL: 0
+;PCODE: $00000167 VOL: 0
+;PCODE: $00000168 VOL: 0
+;PCODE: $00000169 VOL: 0
+; 0000 0082                 else demNut1--; // Decrement the count of button presses for switch 1
+;PCODE: $0000016A VOL: 0
+;PCODE: $0000016B VOL: 0
+;PCODE: $0000016C VOL: 0
+; 0000 0083                 Display7SEGMENT(demNut1); // Display the count on the 7-segment LED
+;PCODE: $0000016D VOL: 0
+;PCODE: $0000016E VOL: 0
+;PCODE: $0000016F VOL: 0
+; 0000 0084             }
+; 0000 0085         }
+;PCODE: $00000170 VOL: 0
+; 0000 0086 
+; 0000 0087 
+; 0000 0088         delay_ms(20); // Wait for 20 ms to debounce the button press
+;PCODE: $00000171 VOL: 0
+;PCODE: $00000172 VOL: 0
+;PCODE: $00000173 VOL: 0
+;PCODE: $00000174 VOL: 0
+; 0000 0089     }
+;PCODE: $00000175 VOL: 0
+;PCODE: $00000176 VOL: 0
+; 0000 008A }
+;PCODE: $00000177 VOL: 0
+;PCODE: $00000178 VOL: 0
+;PCODE: $00000179 VOL: 0

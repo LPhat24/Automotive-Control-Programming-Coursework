@@ -26,6 +26,8 @@ const unsigned char digit[10][7] = {
 //------------------------------------------------------------------------------------------
 unsigned char nutSW1, nutSW2, nutSW1truoc, nutSW2truoc;  // Variables to hold the state of the switches
 unsigned char demNut1; // Variable to hold the count of button presses for switch 1 and switch 2
+unsigned char nutPower, nutPowerTruoc; // PORTC.0 button state + previous state
+unsigned char trangThai = 0;           // 0 = system OFF, 1 = system ON
 //------------------------------------------------------------------------------------------
 
 // Function to display a digit on the 7-segment LED
@@ -82,6 +84,9 @@ void main(void)
     DDRD.7 = 0; // Set PORTD pin 7 as input (LED ON/OFF control)
     PORTD.7 = 1; // Enable pull-up resistor on PORTD pin 7
 
+    DDRC.0 = 0; // Set PORTC pin 0 as input (power button)
+    PORTC.0 = 1; // Enable pull-up resistor on PORTC pin 0
+
     Display7SEGMENT(20); // Turn on all segments
     delay_ms(1000);     // Wait for 1000 ms
     Display7SEGMENT(16); // Turn off all segments
@@ -91,6 +96,8 @@ void main(void)
     nutSW2 = PIND.7; // Read the state of switch 2 (PORTD pin 7)
     nutSW1truoc = nutSW1; // Store the initial state of switch 1
     nutSW2truoc = nutSW2; // Store the initial state of switch 2
+    nutPower = PINC.0; // Read the initial state of the power button (PORTC pin 0)
+    nutPowerTruoc = nutPower; // Store the initial state of the power button
 
     while (1)
     {
@@ -98,21 +105,34 @@ void main(void)
         nutSW2truoc = nutSW2; // Store the previous state of switch 2
         nutSW1 = PIND.4; // Read the state of switch 1 (PORTD pin 4)
         nutSW2 = PIND.7; // Read the state of switch 2 (PORTD pin 7)
-        
-        if (nutSW2 == 0 && nutSW2truoc == 1) // If PORTD pin 7 is LOW (button pressed) and was HIGH before
+
+        nutPowerTruoc = nutPower; // Store the previous state of the power button
+        nutPower = PINC.0; // Read the state of the power button (PORTC pin 0)
+
+        if (nutPower == 0 && nutPowerTruoc == 1) // Falling edge = power button pressed
         {
-            if (demNut1 == 9) demNut1 = 0; // Reset count to 0 if it exceeds 9
-            else demNut1++; // Increment the count of button presses for switch 2
-            Display7SEGMENT(demNut1); // Display the count on the 7-segment LED
+            trangThai = !trangThai;              // Latch ON <-> OFF
+            if (trangThai) Display7SEGMENT(demNut1); // ON: show last count
+            else Display7SEGMENT(16);                // OFF: blank display
         }
-        if (nutSW1 == 0 && nutSW1truoc == 1) // If PORTD pin 4 is LOW (button pressed) and was HIGH before
+
+        if (trangThai) // SW1/SW2 only work when the system is ON
         {
-            if (demNut1 == 0) demNut1 = 9; // Reset count to 9 if it goes below 0
-            else demNut1--; // Decrement the count of button presses for switch 1
-            Display7SEGMENT(demNut1); // Display the count on the 7-segment LED
+            if (nutSW2 == 0 && nutSW2truoc == 1) // If PORTD pin 7 is LOW (button pressed) and was HIGH before
+            {
+                if (demNut1 == 9) demNut1 = 0; // Reset count to 0 if it exceeds 9
+                else demNut1++; // Increment the count of button presses for switch 2
+                Display7SEGMENT(demNut1); // Display the count on the 7-segment LED
+            }
+            if (nutSW1 == 0 && nutSW1truoc == 1) // If PORTD pin 4 is LOW (button pressed) and was HIGH before
+            {
+                if (demNut1 == 0) demNut1 = 9; // Reset count to 9 if it goes below 0
+                else demNut1--; // Decrement the count of button presses for switch 1
+                Display7SEGMENT(demNut1); // Display the count on the 7-segment LED
+            }
         }
-        
-        
+
+
         delay_ms(20); // Wait for 20 ms to debounce the button press
     }
 }
