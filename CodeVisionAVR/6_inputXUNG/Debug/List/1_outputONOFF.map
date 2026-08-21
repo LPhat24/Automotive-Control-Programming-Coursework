@@ -1,0 +1,42 @@
+RAM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+rx_buffer0                                                                        0x0300      64
+tx_buffer0                                                                        0x0340      64
+nutSW3                                                                            0x0380       1
+nutSW3truoc                                                                       0x0381       1
+trangThai                                                                         0x0382       1
+kqADC6                                                                            0x0383       2
+kqADC7                                                                            0x0385       2
+
+EEPROM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+
+Register Allocation
+Variable                                                                          Register  Size
+------------------------------------------------------------------------------------------------
+demXung                                                                           R3,R4        2
+rx_wr_index0                                                                      R6           1
+rx_rd_index0                                                                      R5           1
+rx_counter0                                                                       R8           1
+rx_buffer_overflow0                                                               GPIOR0.0  1bit
+tx_wr_index0                                                                      R7           1
+tx_rd_index0                                                                      R10          1
+tx_counter0                                                                       R9           1
+nutSW1                                                                            R12          1
+nutSW2                                                                            R11          1
+nutSW1truoc                                                                       R14          1
+nutSW2truoc                                                                       R13          1
+
+FLASH Allocation [words]
+Function                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+ext_int1_isr                                                                      0x00073      7
+read_adc                                                                          0x0007A     27
+usart_rx_isr                                                                      0x00095     30
+usart_tx_isr                                                                      0x000B3     22
+putchar                                                                           0x000C9     29
+Display7SEGMENT                                                                   0x000E6    107
+gui_unint                                                                         0x00151     31
+main                                                                              0x00170    167
