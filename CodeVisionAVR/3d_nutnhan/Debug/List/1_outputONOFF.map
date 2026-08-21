@@ -14,8 +14,8 @@ nutSW2                                                                          
 nutSW1truoc                                                                       R6           1
 nutSW2truoc                                                                       R5           1
 demNut1                                                                           R8           1
-nutPower                                                                          R7           1
-nutPowerTruoc                                                                     R10          1
+nutSW3                                                                            R7           1
+nutSW3truoc                                                                       R10          1
 trangThai                                                                         R9           1
 
 FLASH Allocation [words]

@@ -50,7 +50,7 @@
 ;//------------------------------------------------------------------------------------------
 ;unsigned char nutSW1, nutSW2, nutSW1truoc, nutSW2truoc;  // Variables to hold the state of the switches
 ;unsigned char demNut1; // Variable to hold the count of button presses for switch 1 and switch 2
-;unsigned char nutPower, nutPowerTruoc; // PORTC.0 button state + previous state
+;unsigned char nutSW3, nutSW3truoc; // Switch 3 (PORTC.0) state + previous state
 ;unsigned char trangThai = 0;           // 0 = system OFF, 1 = system ON
 ;//------------------------------------------------------------------------------------------
 ;
@@ -394,11 +394,11 @@
 ; 0000 0062     nutSW2truoc = nutSW2; // Store the initial state of switch 2
 ;PCODE: $0000011A VOL: 0
 ;PCODE: $0000011B VOL: 0
-; 0000 0063     nutPower = PINC.0; // Read the initial state of the power button (PORTC pin 0)
+; 0000 0063     nutSW3 = PINC.0; // Read the initial state of switch 3 (PORTC pin 0)
 ;PCODE: $0000011C VOL: 0
 ;PCODE: $0000011D VOL: 0
 ;PCODE: $0000011E VOL: 0
-; 0000 0064     nutPowerTruoc = nutPower; // Store the initial state of the power button
+; 0000 0064     nutSW3truoc = nutSW3; // Store the initial state of switch 3
 ;PCODE: $0000011F VOL: 0
 ;PCODE: $00000120 VOL: 0
 ; 0000 0065 
@@ -420,15 +420,15 @@
 ;PCODE: $0000012A VOL: 0
 ;PCODE: $0000012B VOL: 0
 ; 0000 006C 
-; 0000 006D         nutPowerTruoc = nutPower; // Store the previous state of the power button
+; 0000 006D         nutSW3truoc = nutSW3; // Store the previous state of switch 3
 ;PCODE: $0000012C VOL: 0
 ;PCODE: $0000012D VOL: 0
-; 0000 006E         nutPower = PINC.0; // Read the state of the power button (PORTC pin 0)
+; 0000 006E         nutSW3 = PINC.0; // Read the state of switch 3 (PORTC pin 0)
 ;PCODE: $0000012E VOL: 0
 ;PCODE: $0000012F VOL: 0
 ;PCODE: $00000130 VOL: 0
 ; 0000 006F 
-; 0000 0070         if (nutPower == 0 && nutPowerTruoc == 1) // Falling edge = power button pressed
+; 0000 0070         if (nutSW3 == 0 && nutSW3truoc == 1) // Falling edge = switch 3 pressed
 ;PCODE: $00000131 VOL: 0
 ;PCODE: $00000132 VOL: 0
 ;PCODE: $00000133 VOL: 0

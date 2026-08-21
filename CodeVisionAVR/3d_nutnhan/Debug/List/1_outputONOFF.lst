@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.1.30  D:\Work\Study\TT Lap trinh dieu khien tren O to\CodeVisionAVR\3d_nutnhan\Debug\List\1_outputONOFF.asm Fri Aug 21 07:52:13 2026
+AVRASM ver. 2.1.30  D:\Work\Study\TT Lap trinh dieu khien tren O to\CodeVisionAVR\3d_nutnhan\Debug\List\1_outputONOFF.asm Fri Aug 21 08:28:23 2026
 
 D:\Work\Study\TT Lap trinh dieu khien tren O to\CodeVisionAVR\3d_nutnhan\Debug\List\1_outputONOFF.asm(1090): warning: Register r4 already defined by the .DEF directive
 D:\Work\Study\TT Lap trinh dieu khien tren O to\CodeVisionAVR\3d_nutnhan\Debug\List\1_outputONOFF.asm(1091): warning: Register r3 already defined by the .DEF directive
@@ -1104,8 +1104,8 @@ D:\Work\Study\TT Lap trinh dieu khien tren O to\CodeVisionAVR\3d_nutnhan\Debug\L
                  	.DEF _nutSW1truoc=R6
                  	.DEF _nutSW2truoc=R5
                  	.DEF _demNut1=R8
-                 	.DEF _nutPower=R7
-                 	.DEF _nutPowerTruoc=R10
+                 	.DEF _nutSW3=R7
+                 	.DEF _nutSW3truoc=R10
                  	.DEF _trangThai=R9
                  
                  ;GPIOR0 INITIALIZATION VALUE
@@ -1276,7 +1276,7 @@ D:\Work\Study\TT Lap trinh dieu khien tren O to\CodeVisionAVR\3d_nutnhan\Debug\L
                  ;//------------------------------------------------------------------------------------------
                  ;unsigned char nutSW1, nutSW2, nutSW1truoc, nutSW2truoc;  // Variables to hold the state of the switches
                  ;unsigned char demNut1; // Variable to hold the count of button presses for switch 1 and switch 2
-                 ;unsigned char nutPower, nutPowerTruoc; // PORTC.0 button state + previous state
+                 ;unsigned char nutSW3, nutSW3truoc; // Switch 3 (PORTC.0) state + previous state
                  ;unsigned char trangThai = 0;           // 0 = system OFF, 1 = system ON
                  ;//------------------------------------------------------------------------------------------
                  ;
@@ -1495,12 +1495,12 @@ D:\Work\Study\TT Lap trinh dieu khien tren O to\CodeVisionAVR\3d_nutnhan\Debug\L
 0000eb 2c64      	MOV  R6,R4
                  ; 0000 0062     nutSW2truoc = nutSW2; // Store the initial state of switch 2
 0000ec 2c53      	MOV  R5,R3
-                 ; 0000 0063     nutPower = PINC.0; // Read the initial state of the power button (PORTC pin 0)
+                 ; 0000 0063     nutSW3 = PINC.0; // Read the initial state of switch 3 (PORTC pin 0)
 0000ed e0e0      	LDI  R30,0
 0000ee 9930      	SBIC 0x6,0
 0000ef e0e1      	LDI  R30,1
 0000f0 2e7e      	MOV  R7,R30
-                 ; 0000 0064     nutPowerTruoc = nutPower; // Store the initial state of the power button
+                 ; 0000 0064     nutSW3truoc = nutSW3; // Store the initial state of switch 3
 0000f1 2ca7      	MOV  R10,R7
                  ; 0000 0065 
                  ; 0000 0066     while (1)
@@ -1514,15 +1514,15 @@ D:\Work\Study\TT Lap trinh dieu khien tren O to\CodeVisionAVR\3d_nutnhan\Debug\L
 0000f4 d043      	RCALL SUBOPT_0x2
                  ; 0000 006B         nutSW2 = PIND.7; // Read the state of switch 2 (PORTD pin 7)
                  ; 0000 006C 
-                 ; 0000 006D         nutPowerTruoc = nutPower; // Store the previous state of the power button
+                 ; 0000 006D         nutSW3truoc = nutSW3; // Store the previous state of switch 3
 0000f5 2ca7      	MOV  R10,R7
-                 ; 0000 006E         nutPower = PINC.0; // Read the state of the power button (PORTC pin 0)
+                 ; 0000 006E         nutSW3 = PINC.0; // Read the state of switch 3 (PORTC pin 0)
 0000f6 e0e0      	LDI  R30,0
 0000f7 9930      	SBIC 0x6,0
 0000f8 e0e1      	LDI  R30,1
 0000f9 2e7e      	MOV  R7,R30
                  ; 0000 006F 
-                 ; 0000 0070         if (nutPower == 0 && nutPowerTruoc == 1) // Falling edge = power button pressed
+                 ; 0000 0070         if (nutSW3 == 0 && nutSW3truoc == 1) // Falling edge = switch 3 pressed
 0000fa 2077      	TST  R7
 0000fb f419      	BRNE _0xD5
 0000fc e0e1      	LDI  R30,LOW(1)

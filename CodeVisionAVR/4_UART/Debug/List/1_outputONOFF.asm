@@ -1087,14 +1087,18 @@ __DELAY_USW_LOOP:
 	.ENDM
 
 ;NAME DEFINITIONS FOR GLOBAL VARIABLES ALLOCATED TO REGISTERS
-	.DEF _nutSW1=R4
-	.DEF _nutSW2=R3
-	.DEF _nutSW1truoc=R6
-	.DEF _nutSW2truoc=R5
-	.DEF _demNut1=R8
-	.DEF _nutSW3=R7
-	.DEF _nutSW3truoc=R10
-	.DEF _trangThai=R9
+	.DEF _rx_wr_index0=R4
+	.DEF _rx_rd_index0=R3
+	.DEF _rx_counter0=R6
+	.DEF _tx_wr_index0=R5
+	.DEF _tx_rd_index0=R8
+	.DEF _tx_counter0=R7
+	.DEF _nutSW1=R10
+	.DEF _nutSW2=R9
+	.DEF _nutSW1truoc=R12
+	.DEF _nutSW2truoc=R11
+	.DEF _demNut1=R14
+	.DEF _nutSW3=R13
 
 ;GPIOR0 INITIALIZATION VALUE
 	.EQU __GPIOR0_INIT=0x00
@@ -1124,23 +1128,30 @@ __START_OF_CODE:
 	JMP  0x00
 	JMP  0x00
 	JMP  0x00
+	JMP  _usart_rx_isr
+	JMP  0x00
+	JMP  _usart_tx_isr
 	JMP  0x00
 	JMP  0x00
 	JMP  0x00
 	JMP  0x00
 	JMP  0x00
-	JMP  0x00
-	JMP  0x00
-	JMP  0x00
+
+_tbl10_G100:
+	.DB  0x10,0x27,0xE8,0x3,0x64,0x0,0xA,0x0
+	.DB  0x1,0x0
+_tbl16_G100:
+	.DB  0x0,0x10,0x0,0x1,0x10,0x0,0x1,0x0
 
 ;GLOBAL REGISTER VARIABLES INITIALIZATION
 __REG_VARS:
-	.DB  0x0
+	.DB  0x0,0x0,0x0,0x0
+	.DB  0x0,0x0
 
 
 __GLOBAL_INI_TBL:
-	.DW  0x01
-	.DW  0x09
+	.DW  0x06
+	.DW  0x03
 	.DW  __REG_VARS*2
 
 _0xFFFFFFFF:
@@ -1238,6 +1249,238 @@ __GLOBAL_INI_END:
 	#endif
 ;#include <delay.h>
 ;
+;// ------------UART-----------
+;#define DATA_REGISTER_EMPTY (1<<UDRE0)
+;#define RX_COMPLETE (1<<RXC0)
+;#define FRAMING_ERROR (1<<FE0)
+;#define PARITY_ERROR (1<<UPE0)
+;#define DATA_OVERRUN (1<<DOR0)
+;
+;// USART Receiver buffer
+;#define RX_BUFFER_SIZE0 64
+;char rx_buffer0[RX_BUFFER_SIZE0];
+;
+;#if RX_BUFFER_SIZE0 <= 256
+;unsigned char rx_wr_index0=0,rx_rd_index0=0;
+;#else
+;unsigned int rx_wr_index0=0,rx_rd_index0=0;
+;#endif
+;
+;#if RX_BUFFER_SIZE0 < 256
+;unsigned char rx_counter0=0;
+;#else
+;unsigned int rx_counter0=0;
+;#endif
+;
+;// This flag is set on USART Receiver buffer overflow
+;bit rx_buffer_overflow0;
+;
+;// USART Receiver interrupt service routine
+;interrupt [USART_RXC] void usart_rx_isr(void)
+; 0000 0020 {
+
+	.CSEG
+_usart_rx_isr:
+; .FSTART _usart_rx_isr
+	ST   -Y,R30
+	ST   -Y,R31
+	IN   R30,SREG
+	ST   -Y,R30
+; 0000 0021 char status,data;
+; 0000 0022 status=UCSR0A;
+	ST   -Y,R17
+	ST   -Y,R16
+;	status -> R17
+;	data -> R16
+	LDS  R17,192
+; 0000 0023 data=UDR0;
+	LDS  R16,198
+; 0000 0024 if ((status & (FRAMING_ERROR | PARITY_ERROR | DATA_OVERRUN))==0)
+	MOV  R30,R17
+	ANDI R30,LOW(0x1C)
+	BRNE _0x3
+; 0000 0025    {
+; 0000 0026    rx_buffer0[rx_wr_index0++]=data;
+	MOV  R30,R4
+	INC  R4
+	LDI  R31,0
+	SUBI R30,LOW(-_rx_buffer0)
+	SBCI R31,HIGH(-_rx_buffer0)
+	ST   Z,R16
+; 0000 0027 #if RX_BUFFER_SIZE0 == 256
+; 0000 0028    // special case for receiver buffer size=256
+; 0000 0029    if (++rx_counter0 == 0) rx_buffer_overflow0=1;
+; 0000 002A #else
+; 0000 002B    if (rx_wr_index0 == RX_BUFFER_SIZE0) rx_wr_index0=0;
+	LDI  R30,LOW(64)
+	CP   R30,R4
+	BRNE _0x4
+	CLR  R4
+; 0000 002C    if (++rx_counter0 == RX_BUFFER_SIZE0)
+_0x4:
+	INC  R6
+	LDI  R30,LOW(64)
+	CP   R30,R6
+	BRNE _0x5
+; 0000 002D       {
+; 0000 002E       rx_counter0=0;
+	CLR  R6
+; 0000 002F       rx_buffer_overflow0=1;
+	SBI  0x1E,0
+; 0000 0030       }
+; 0000 0031 #endif
+; 0000 0032    }
+_0x5:
+; 0000 0033 }
+_0x3:
+	LD   R16,Y+
+	LD   R17,Y+
+	RJMP _0xF9
+; .FEND
+;
+;#ifndef _DEBUG_TERMINAL_IO_
+;// Get a character from the USART Receiver buffer
+;#define _ALTERNATE_GETCHAR_
+;#pragma used+
+;char getchar(void)
+; 0000 003A {
+; 0000 003B char data;
+; 0000 003C while (rx_counter0==0);
+;	data -> R17
+; 0000 003D data=rx_buffer0[rx_rd_index0++];
+; 0000 003E #if RX_BUFFER_SIZE0 != 256
+; 0000 003F if (rx_rd_index0 == RX_BUFFER_SIZE0) rx_rd_index0=0;
+; 0000 0040 #endif
+; 0000 0041 #asm("cli")
+; 0000 0042 --rx_counter0;
+; 0000 0043 #asm("sei")
+; 0000 0044 return data;
+; 0000 0045 }
+;#pragma used-
+;#endif
+;
+;// USART Transmitter buffer
+;#define TX_BUFFER_SIZE0 64
+;char tx_buffer0[TX_BUFFER_SIZE0];
+;
+;#if TX_BUFFER_SIZE0 <= 256
+;unsigned char tx_wr_index0=0,tx_rd_index0=0;
+;#else
+;unsigned int tx_wr_index0=0,tx_rd_index0=0;
+;#endif
+;
+;#if TX_BUFFER_SIZE0 < 256
+;unsigned char tx_counter0=0;
+;#else
+;unsigned int tx_counter0=0;
+;#endif
+;
+;// USART Transmitter interrupt service routine
+;interrupt [USART_TXC] void usart_tx_isr(void)
+; 0000 005B {
+_usart_tx_isr:
+; .FSTART _usart_tx_isr
+	ST   -Y,R30
+	ST   -Y,R31
+	IN   R30,SREG
+	ST   -Y,R30
+; 0000 005C if (tx_counter0)
+	TST  R7
+	BREQ _0xC
+; 0000 005D    {
+; 0000 005E    --tx_counter0;
+	DEC  R7
+; 0000 005F    UDR0=tx_buffer0[tx_rd_index0++];
+	MOV  R30,R8
+	INC  R8
+	LDI  R31,0
+	SUBI R30,LOW(-_tx_buffer0)
+	SBCI R31,HIGH(-_tx_buffer0)
+	LD   R30,Z
+	STS  198,R30
+; 0000 0060 #if TX_BUFFER_SIZE0 != 256
+; 0000 0061    if (tx_rd_index0 == TX_BUFFER_SIZE0) tx_rd_index0=0;
+	LDI  R30,LOW(64)
+	CP   R30,R8
+	BRNE _0xD
+	CLR  R8
+; 0000 0062 #endif
+; 0000 0063    }
+_0xD:
+; 0000 0064 }
+_0xC:
+_0xF9:
+	LD   R30,Y+
+	OUT  SREG,R30
+	LD   R31,Y+
+	LD   R30,Y+
+	RETI
+; .FEND
+;
+;#ifndef _DEBUG_TERMINAL_IO_
+;// Write a character to the USART Transmitter buffer
+;#define _ALTERNATE_PUTCHAR_
+;#pragma used+
+;void putchar(char c)
+; 0000 006B {
+_putchar:
+; .FSTART _putchar
+; 0000 006C while (tx_counter0 == TX_BUFFER_SIZE0);
+	ST   -Y,R26
+;	c -> Y+0
+_0xE:
+	LDI  R30,LOW(64)
+	CP   R30,R7
+	BREQ _0xE
+; 0000 006D #asm("cli")
+	cli
+; 0000 006E if (tx_counter0 || ((UCSR0A & DATA_REGISTER_EMPTY)==0))
+	TST  R7
+	BRNE _0x12
+	LDS  R30,192
+	ANDI R30,LOW(0x20)
+	BRNE _0x11
+_0x12:
+; 0000 006F    {
+; 0000 0070    tx_buffer0[tx_wr_index0++]=c;
+	MOV  R30,R5
+	INC  R5
+	LDI  R31,0
+	SUBI R30,LOW(-_tx_buffer0)
+	SBCI R31,HIGH(-_tx_buffer0)
+	LD   R26,Y
+	STD  Z+0,R26
+; 0000 0071 #if TX_BUFFER_SIZE0 != 256
+; 0000 0072    if (tx_wr_index0 == TX_BUFFER_SIZE0) tx_wr_index0=0;
+	LDI  R30,LOW(64)
+	CP   R30,R5
+	BRNE _0x14
+	CLR  R5
+; 0000 0073 #endif
+; 0000 0074    ++tx_counter0;
+_0x14:
+	INC  R7
+; 0000 0075    }
+; 0000 0076 else
+	RJMP _0x15
+_0x11:
+; 0000 0077    UDR0=c;
+	LD   R30,Y
+	STS  198,R30
+; 0000 0078 #asm("sei")
+_0x15:
+	sei
+; 0000 0079 }
+	RJMP _0x2060001
+; .FEND
+;#pragma used-
+;#endif
+;
+;// Standard Input/Output functions
+;#include <stdio.h>
+;//---------------------------------------------
+;
+;
 ;//--7 SEGMENT LED--
 ;#define LEDa PORTD.6  // Segment a -> PORTD pin 6
 ;#define LEDb PORTB.0  // Segment b -> PORTB pin 0
@@ -1269,42 +1512,40 @@ __GLOBAL_INI_END:
 ;
 ;// Function to display a digit on the 7-segment LED
 ;void Display7SEGMENT(unsigned char num)
-; 0000 0023 {
-
-	.CSEG
+; 0000 00A1 {
 _Display7SEGMENT:
 ; .FSTART _Display7SEGMENT
-; 0000 0024 //     LEDa = digit[num][0];
-; 0000 0025 //     LEDb = digit[num][1];
-; 0000 0026 //     LEDc = digit[num][2];
-; 0000 0027 //     LEDd = digit[num][3];
-; 0000 0028 //     LEDe = digit[num][4];
-; 0000 0029 //     LEDf = digit[num][5];
-; 0000 002A //     LEDg = digit[num][6];
-; 0000 002B     if (num == 0 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 0; }
+; 0000 00A2 //     LEDa = digit[num][0];
+; 0000 00A3 //     LEDb = digit[num][1];
+; 0000 00A4 //     LEDc = digit[num][2];
+; 0000 00A5 //     LEDd = digit[num][3];
+; 0000 00A6 //     LEDe = digit[num][4];
+; 0000 00A7 //     LEDf = digit[num][5];
+; 0000 00A8 //     LEDg = digit[num][6];
+; 0000 00A9     if (num == 0 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 0; }
 	ST   -Y,R26
 ;	num -> Y+0
 	LD   R30,Y
 	CPI  R30,0
-	BRNE _0x3
-	RCALL SUBOPT_0x0
+	BRNE _0x16
+	CALL SUBOPT_0x0
 	SBI  0x5,2
 	SBI  0x5,3
 	CBI  0x5,4
-; 0000 002C     if (num == 1 ) { LEDa = 0; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
-_0x3:
+; 0000 00AA     if (num == 1 ) { LEDa = 0; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
+_0x16:
 	LD   R26,Y
 	CPI  R26,LOW(0x1)
-	BRNE _0x12
+	BRNE _0x25
 	CBI  0xB,6
-	RCALL SUBOPT_0x1
+	CALL SUBOPT_0x1
 	CBI  0x5,3
 	CBI  0x5,4
-; 0000 002D     if (num == 2 ) { LEDa = 1; LEDb = 1; LEDc = 0; LEDd = 1; LEDe = 1; LEDf = 0; LEDg = 1; }
-_0x12:
+; 0000 00AB     if (num == 2 ) { LEDa = 1; LEDb = 1; LEDc = 0; LEDd = 1; LEDe = 1; LEDf = 0; LEDg = 1; }
+_0x25:
 	LD   R26,Y
 	CPI  R26,LOW(0x2)
-	BRNE _0x21
+	BRNE _0x34
 	SBI  0xB,6
 	SBI  0x5,0
 	CBI  0x5,1
@@ -1312,29 +1553,29 @@ _0x12:
 	SBI  0x5,2
 	CBI  0x5,3
 	SBI  0x5,4
-; 0000 002E     if (num == 3 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 0; LEDg = 1; }
-_0x21:
+; 0000 00AC     if (num == 3 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 0; LEDg = 1; }
+_0x34:
 	LD   R26,Y
 	CPI  R26,LOW(0x3)
-	BRNE _0x30
-	RCALL SUBOPT_0x0
+	BRNE _0x43
+	CALL SUBOPT_0x0
 	CBI  0x5,2
 	CBI  0x5,3
 	SBI  0x5,4
-; 0000 002F     if (num == 4 ) { LEDa = 0; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 1; LEDg = 1; }
-_0x30:
+; 0000 00AD     if (num == 4 ) { LEDa = 0; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 1; LEDg = 1; }
+_0x43:
 	LD   R26,Y
 	CPI  R26,LOW(0x4)
-	BRNE _0x3F
+	BRNE _0x52
 	CBI  0xB,6
-	RCALL SUBOPT_0x1
+	CALL SUBOPT_0x1
 	SBI  0x5,3
 	SBI  0x5,4
-; 0000 0030     if (num == 5 ) { LEDa = 1; LEDb = 0; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 1; LEDg = 1; }
-_0x3F:
+; 0000 00AE     if (num == 5 ) { LEDa = 1; LEDb = 0; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 1; LEDg = 1; }
+_0x52:
 	LD   R26,Y
 	CPI  R26,LOW(0x5)
-	BRNE _0x4E
+	BRNE _0x61
 	SBI  0xB,6
 	CBI  0x5,0
 	SBI  0x5,1
@@ -1342,11 +1583,11 @@ _0x3F:
 	CBI  0x5,2
 	SBI  0x5,3
 	SBI  0x5,4
-; 0000 0031     if (num == 6 ) { LEDa = 1; LEDb = 0; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
-_0x4E:
+; 0000 00AF     if (num == 6 ) { LEDa = 1; LEDb = 0; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
+_0x61:
 	LD   R26,Y
 	CPI  R26,LOW(0x6)
-	BRNE _0x5D
+	BRNE _0x70
 	SBI  0xB,6
 	CBI  0x5,0
 	SBI  0x5,1
@@ -1354,39 +1595,39 @@ _0x4E:
 	SBI  0x5,2
 	SBI  0x5,3
 	SBI  0x5,4
-; 0000 0032     if (num == 7 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
-_0x5D:
+; 0000 00B0     if (num == 7 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
+_0x70:
 	LD   R26,Y
 	CPI  R26,LOW(0x7)
-	BRNE _0x6C
+	BRNE _0x7F
 	SBI  0xB,6
-	RCALL SUBOPT_0x1
+	CALL SUBOPT_0x1
 	CBI  0x5,3
 	CBI  0x5,4
-; 0000 0033     if (num == 8 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
-_0x6C:
+; 0000 00B1     if (num == 8 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
+_0x7F:
 	LD   R26,Y
 	CPI  R26,LOW(0x8)
-	BRNE _0x7B
-	RCALL SUBOPT_0x0
+	BRNE _0x8E
+	CALL SUBOPT_0x0
 	SBI  0x5,2
 	SBI  0x5,3
 	SBI  0x5,4
-; 0000 0034     if (num == 9 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 1; LEDg = 1; }
-_0x7B:
+; 0000 00B2     if (num == 9 ) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 0; LEDf = 1; LEDg = 1; }
+_0x8E:
 	LD   R26,Y
 	CPI  R26,LOW(0x9)
-	BRNE _0x8A
-	RCALL SUBOPT_0x0
+	BRNE _0x9D
+	CALL SUBOPT_0x0
 	CBI  0x5,2
 	SBI  0x5,3
 	SBI  0x5,4
-; 0000 0035 
-; 0000 0036     if (num == 16) { LEDa = 0; LEDb = 0; LEDc = 0; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
-_0x8A:
+; 0000 00B3 
+; 0000 00B4     if (num == 16) { LEDa = 0; LEDb = 0; LEDc = 0; LEDd = 0; LEDe = 0; LEDf = 0; LEDg = 0; }
+_0x9D:
 	LD   R26,Y
 	CPI  R26,LOW(0x10)
-	BRNE _0x99
+	BRNE _0xAC
 	CBI  0xB,6
 	CBI  0x5,0
 	CBI  0x5,1
@@ -1394,17 +1635,18 @@ _0x8A:
 	CBI  0x5,2
 	CBI  0x5,3
 	CBI  0x5,4
-; 0000 0037     if (num == 20) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
-_0x99:
+; 0000 00B5     if (num == 20) { LEDa = 1; LEDb = 1; LEDc = 1; LEDd = 1; LEDe = 1; LEDf = 1; LEDg = 1; }
+_0xAC:
 	LD   R26,Y
 	CPI  R26,LOW(0x14)
-	BRNE _0xA8
-	RCALL SUBOPT_0x0
+	BRNE _0xBB
+	CALL SUBOPT_0x0
 	SBI  0x5,2
 	SBI  0x5,3
 	SBI  0x5,4
-; 0000 0038 }
-_0xA8:
+; 0000 00B6 }
+_0xBB:
+_0x2060001:
 	ADIW R28,1
 	RET
 ; .FEND
@@ -1416,194 +1658,298 @@ _0xA8:
 ;// }
 ;
 ;void main(void)
-; 0000 0041 {
+; 0000 00BF {
 _main:
 ; .FSTART _main
-; 0000 0042     // Crystal Oscillator division factor: 1
-; 0000 0043     #pragma optsize-
-; 0000 0044     CLKPR = (1<<CLKPCE);
+; 0000 00C0     // Crystal Oscillator division factor: 1
+; 0000 00C1     #pragma optsize-
+; 0000 00C2     CLKPR = (1<<CLKPCE);
 	LDI  R30,LOW(128)
 	STS  97,R30
-; 0000 0045     CLKPR = (0<<CLKPCE) | (0<<CLKPS3) | (0<<CLKPS2) | (0<<CLKPS1) | (0<<CLKPS0);
+; 0000 00C3     CLKPR = (0<<CLKPCE) | (0<<CLKPS3) | (0<<CLKPS2) | (0<<CLKPS1) | (0<<CLKPS0);
 	LDI  R30,LOW(0)
 	STS  97,R30
-; 0000 0046     #ifdef _OPTIMIZE_SIZE_
-; 0000 0047     #pragma optsize+
-; 0000 0048     #endif
-; 0000 0049 
-; 0000 004A     DDRD.6 = 1; // Set PORTD pin 6 as output (Segment a)
+; 0000 00C4     #ifdef _OPTIMIZE_SIZE_
+; 0000 00C5     #pragma optsize+
+; 0000 00C6     #endif
+; 0000 00C7 
+; 0000 00C8     // USART initialization
+; 0000 00C9     // Communication Parameters: 8 Data, 1 Stop, No Parity
+; 0000 00CA     // USART Receiver: On
+; 0000 00CB     // USART Transmitter: On
+; 0000 00CC     // USART0 Mode: Asynchronous
+; 0000 00CD     // USART Baud Rate: 9600
+; 0000 00CE     UCSR0A=(0<<RXC0) | (0<<TXC0) | (0<<UDRE0) | (0<<FE0) | (0<<DOR0) | (0<<UPE0) | (0<<U2X0) | (0<<MPCM0);
+	STS  192,R30
+; 0000 00CF     UCSR0B=(1<<RXCIE0) | (1<<TXCIE0) | (0<<UDRIE0) | (1<<RXEN0) | (1<<TXEN0) | (0<<UCSZ02) | (0<<RXB80) | (0<<TXB80);
+	LDI  R30,LOW(216)
+	STS  193,R30
+; 0000 00D0     UCSR0C=(0<<UMSEL01) | (0<<UMSEL00) | (0<<UPM01) | (0<<UPM00) | (0<<USBS0) | (1<<UCSZ01) | (1<<UCSZ00) | (0<<UCPOL0);
+	LDI  R30,LOW(6)
+	STS  194,R30
+; 0000 00D1     UBRR0H=0x00;
+	LDI  R30,LOW(0)
+	STS  197,R30
+; 0000 00D2     UBRR0L=0x67;
+	LDI  R30,LOW(103)
+	STS  196,R30
+; 0000 00D3 
+; 0000 00D4 
+; 0000 00D5     DDRD.6 = 1; // Set PORTD pin 6 as output (Segment a)
 	SBI  0xA,6
-; 0000 004B     DDRB.0 = 1; // Set PORTB pin 0 as output (Segment b)
+; 0000 00D6     DDRB.0 = 1; // Set PORTB pin 0 as output (Segment b)
 	SBI  0x4,0
-; 0000 004C     DDRB.1 = 1; // Set PORTB pin 1 as output (Segment c)
+; 0000 00D7     DDRB.1 = 1; // Set PORTB pin 1 as output (Segment c)
 	SBI  0x4,1
-; 0000 004D     DDRD.5 = 1; // Set PORTD pin 5 as output (Segment d)
+; 0000 00D8     DDRD.5 = 1; // Set PORTD pin 5 as output (Segment d)
 	SBI  0xA,5
-; 0000 004E     DDRB.2 = 1; // Set PORTB pin 2 as output (Segment e)
+; 0000 00D9     DDRB.2 = 1; // Set PORTB pin 2 as output (Segment e)
 	SBI  0x4,2
-; 0000 004F     DDRB.3 = 1; // Set PORTB pin 3 as output (Segment f)
+; 0000 00DA     DDRB.3 = 1; // Set PORTB pin 3 as output (Segment f)
 	SBI  0x4,3
-; 0000 0050     DDRB.4 = 1; // Set PORTB pin 4 as output (Segment g)
+; 0000 00DB     DDRB.4 = 1; // Set PORTB pin 4 as output (Segment g)
 	SBI  0x4,4
-; 0000 0051 
-; 0000 0052     DDRD.4 = 0; // Set PORTD pin 4 as input (LED ON/OFF control)
+; 0000 00DC 
+; 0000 00DD     DDRD.4 = 0; // Set PORTD pin 4 as input (LED ON/OFF control)
 	CBI  0xA,4
-; 0000 0053     PORTD.4 = 1; // Enable pull-up resistor on PORTD pin 4
+; 0000 00DE     PORTD.4 = 1; // Enable pull-up resistor on PORTD pin 4
 	SBI  0xB,4
-; 0000 0054     DDRD.7 = 0; // Set PORTD pin 7 as input (LED ON/OFF control)
+; 0000 00DF     DDRD.7 = 0; // Set PORTD pin 7 as input (LED ON/OFF control)
 	CBI  0xA,7
-; 0000 0055     PORTD.7 = 1; // Enable pull-up resistor on PORTD pin 7
+; 0000 00E0     PORTD.7 = 1; // Enable pull-up resistor on PORTD pin 7
 	SBI  0xB,7
-; 0000 0056 
-; 0000 0057     DDRC.0 = 0; // Set PORTC pin 0 as input (power button)
+; 0000 00E1 
+; 0000 00E2     DDRC.0 = 0; // Set PORTC pin 0 as input (power button)
 	CBI  0x7,0
-; 0000 0058     PORTC.0 = 1; // Enable pull-up resistor on PORTC pin 0
+; 0000 00E3     PORTC.0 = 1; // Enable pull-up resistor on PORTC pin 0
 	SBI  0x8,0
-; 0000 0059 
-; 0000 005A     Display7SEGMENT(20); // Turn on all segments
+; 0000 00E4 
+; 0000 00E5     Display7SEGMENT(20); // Turn on all segments
 	LDI  R26,LOW(20)
 	RCALL _Display7SEGMENT
-; 0000 005B     delay_ms(1000);     // Wait for 1000 ms
+; 0000 00E6     delay_ms(1000);     // Wait for 1000 ms
 	LDI  R26,LOW(1000)
 	LDI  R27,HIGH(1000)
 	CALL _delay_ms
-; 0000 005C     Display7SEGMENT(16); // Turn off all segments
+; 0000 00E7     Display7SEGMENT(16); // Turn off all segments
 	LDI  R26,LOW(16)
 	RCALL _Display7SEGMENT
-; 0000 005D     delay_ms(500);     // Wait for 500 ms
+; 0000 00E8     delay_ms(500);     // Wait for 500 ms
 	LDI  R26,LOW(500)
 	LDI  R27,HIGH(500)
 	CALL _delay_ms
-; 0000 005E 
-; 0000 005F     nutSW1 = PIND.4; // Read the state of switch 1 (PORTD pin 4)
-	RCALL SUBOPT_0x2
-; 0000 0060     nutSW2 = PIND.7; // Read the state of switch 2 (PORTD pin 7)
-; 0000 0061     nutSW1truoc = nutSW1; // Store the initial state of switch 1
-	MOV  R6,R4
-; 0000 0062     nutSW2truoc = nutSW2; // Store the initial state of switch 2
-	MOV  R5,R3
-; 0000 0063     nutSW3 = PINC.0; // Read the initial state of switch 3 (PORTC pin 0)
+; 0000 00E9 
+; 0000 00EA     nutSW1 = PIND.4; // Read the state of switch 1 (PORTD pin 4)
+	CALL SUBOPT_0x2
+; 0000 00EB     nutSW2 = PIND.7; // Read the state of switch 2 (PORTD pin 7)
+; 0000 00EC     nutSW1truoc = nutSW1; // Store the initial state of switch 1
+	MOV  R12,R10
+; 0000 00ED     nutSW2truoc = nutSW2; // Store the initial state of switch 2
+	MOV  R11,R9
+; 0000 00EE     nutSW3 = PINC.0; // Read the initial state of switch 3 (PORTC pin 0)
 	LDI  R30,0
 	SBIC 0x6,0
 	LDI  R30,1
-	MOV  R7,R30
-; 0000 0064     nutSW3truoc = nutSW3; // Store the initial state of switch 3
-	MOV  R10,R7
-; 0000 0065 
-; 0000 0066     while (1)
-_0xD1:
-; 0000 0067     {
-; 0000 0068         nutSW1truoc = nutSW1; // Store the previous state of switch 1
-	MOV  R6,R4
-; 0000 0069         nutSW2truoc = nutSW2; // Store the previous state of switch 2
-	MOV  R5,R3
-; 0000 006A         nutSW1 = PIND.4; // Read the state of switch 1 (PORTD pin 4)
-	RCALL SUBOPT_0x2
-; 0000 006B         nutSW2 = PIND.7; // Read the state of switch 2 (PORTD pin 7)
-; 0000 006C 
-; 0000 006D         nutSW3truoc = nutSW3; // Store the previous state of switch 3
-	MOV  R10,R7
-; 0000 006E         nutSW3 = PINC.0; // Read the state of switch 3 (PORTC pin 0)
+	MOV  R13,R30
+; 0000 00EF     nutSW3truoc = nutSW3; // Store the initial state of switch 3
+	STS  _nutSW3truoc,R13
+; 0000 00F0 
+; 0000 00F1     // Global enable interrupts
+; 0000 00F2     #asm("sei")
+	sei
+; 0000 00F3 
+; 0000 00F4     putchar('S');
+	LDI  R26,LOW(83)
+	RCALL _putchar
+; 0000 00F5     putchar('E');
+	LDI  R26,LOW(69)
+	RCALL _putchar
+; 0000 00F6     putchar('T');
+	LDI  R26,LOW(84)
+	RCALL _putchar
+; 0000 00F7     putchar('U');
+	LDI  R26,LOW(85)
+	RCALL _putchar
+; 0000 00F8     putchar('P');
+	LDI  R26,LOW(80)
+	RCALL _putchar
+; 0000 00F9     putchar(10);
+	CALL SUBOPT_0x3
+; 0000 00FA     putchar(13);
+; 0000 00FB 
+; 0000 00FC 
+; 0000 00FD     while (1)
+_0xE4:
+; 0000 00FE     {
+; 0000 00FF         nutSW1truoc = nutSW1; // Store the previous state of switch 1
+	MOV  R12,R10
+; 0000 0100         nutSW2truoc = nutSW2; // Store the previous state of switch 2
+	MOV  R11,R9
+; 0000 0101         nutSW1 = PIND.4; // Read the state of switch 1 (PORTD pin 4)
+	CALL SUBOPT_0x2
+; 0000 0102         nutSW2 = PIND.7; // Read the state of switch 2 (PORTD pin 7)
+; 0000 0103 
+; 0000 0104         nutSW3truoc = nutSW3; // Store the previous state of switch 3
+	STS  _nutSW3truoc,R13
+; 0000 0105         nutSW3 = PINC.0; // Read the state of switch 3 (PORTC pin 0)
 	LDI  R30,0
 	SBIC 0x6,0
 	LDI  R30,1
-	MOV  R7,R30
-; 0000 006F 
-; 0000 0070         if (nutSW3 == 0 && nutSW3truoc == 1) // Falling edge = switch 3 pressed
-	TST  R7
-	BRNE _0xD5
-	LDI  R30,LOW(1)
-	CP   R30,R10
-	BREQ _0xD6
-_0xD5:
-	RJMP _0xD4
-_0xD6:
-; 0000 0071         {
-; 0000 0072             trangThai = !trangThai;              // Latch ON <-> OFF
-	MOV  R30,R9
+	MOV  R13,R30
+; 0000 0106 
+; 0000 0107         if (nutSW3 == 0 && nutSW3truoc == 1) // Falling edge = switch 3 pressed
+	TST  R13
+	BRNE _0xE8
+	LDS  R26,_nutSW3truoc
+	CPI  R26,LOW(0x1)
+	BREQ _0xE9
+_0xE8:
+	RJMP _0xE7
+_0xE9:
+; 0000 0108         {
+; 0000 0109             trangThai = !trangThai;              // Latch ON <-> OFF
+	LDS  R30,_trangThai
 	CALL __LNEGB1
-	MOV  R9,R30
-; 0000 0073             if (trangThai) Display7SEGMENT(demNut1); // ON: show last count
-	TST  R9
-	BREQ _0xD7
-	MOV  R26,R8
-	RJMP _0xE5
-; 0000 0074             else Display7SEGMENT(16);                // OFF: blank display
-_0xD7:
+	STS  _trangThai,R30
+; 0000 010A             if (trangThai)
+	CPI  R30,0
+	BREQ _0xEA
+; 0000 010B             {
+; 0000 010C                 Display7SEGMENT(demNut1); // ON: show last count
+	MOV  R26,R14
+	RCALL _Display7SEGMENT
+; 0000 010D                 putchar('O');
+	LDI  R26,LOW(79)
+	RCALL _putchar
+; 0000 010E                 putchar('N');
+	LDI  R26,LOW(78)
+	RJMP _0xF8
+; 0000 010F                 putchar(10);
+; 0000 0110                 putchar(13);
+; 0000 0111                 putchar(7); // Bell sound
+; 0000 0112             }
+; 0000 0113             else
+_0xEA:
+; 0000 0114             {
+; 0000 0115                 Display7SEGMENT(16); // OFF: blank display
 	LDI  R26,LOW(16)
-_0xE5:
 	RCALL _Display7SEGMENT
-; 0000 0075         }
-; 0000 0076 
-; 0000 0077         if (trangThai) // SW1/SW2 only work when the system is ON
-_0xD4:
+; 0000 0116                 putchar('O');
+	LDI  R26,LOW(79)
+	RCALL _putchar
+; 0000 0117                 putchar('F');
+	LDI  R26,LOW(70)
+	RCALL _putchar
+; 0000 0118                 putchar('F');
+	LDI  R26,LOW(70)
+_0xF8:
+	RCALL _putchar
+; 0000 0119                 putchar(10);
+	CALL SUBOPT_0x3
+; 0000 011A                 putchar(13);
+; 0000 011B                 putchar(7); // Bell sound
+	LDI  R26,LOW(7)
+	RCALL _putchar
+; 0000 011C             }
+; 0000 011D         }
+; 0000 011E 
+; 0000 011F         if (trangThai) // SW1/SW2 only work when the system is ON
+_0xE7:
+	LDS  R30,_trangThai
+	CPI  R30,0
+	BREQ _0xEC
+; 0000 0120         {
+; 0000 0121             if (nutSW2 == 0 && nutSW2truoc == 1) // If PORTD pin 7 is LOW (button pressed) and was HIGH before
 	TST  R9
-	BREQ _0xD9
-; 0000 0078         {
-; 0000 0079             if (nutSW2 == 0 && nutSW2truoc == 1) // If PORTD pin 7 is LOW (button pressed) and was HIGH before
-	TST  R3
-	BRNE _0xDB
+	BRNE _0xEE
 	LDI  R30,LOW(1)
-	CP   R30,R5
-	BREQ _0xDC
-_0xDB:
-	RJMP _0xDA
-_0xDC:
-; 0000 007A             {
-; 0000 007B                 if (demNut1 == 9) demNut1 = 0; // Reset count to 0 if it exceeds 9
+	CP   R30,R11
+	BREQ _0xEF
+_0xEE:
+	RJMP _0xED
+_0xEF:
+; 0000 0122             {
+; 0000 0123                 if (demNut1 == 9) demNut1 = 0; // Reset count to 0 if it exceeds 9
 	LDI  R30,LOW(9)
-	CP   R30,R8
-	BRNE _0xDD
-	CLR  R8
-; 0000 007C                 else demNut1++; // Increment the count of button presses for switch 2
-	RJMP _0xDE
-_0xDD:
-	INC  R8
-; 0000 007D                 Display7SEGMENT(demNut1); // Display the count on the 7-segment LED
-_0xDE:
-	MOV  R26,R8
+	CP   R30,R14
+	BRNE _0xF0
+	CLR  R14
+; 0000 0124                 else demNut1++; // Increment the count of button presses for switch 2
+	RJMP _0xF1
+_0xF0:
+	INC  R14
+; 0000 0125                 Display7SEGMENT(demNut1); // Display the count on the 7-segment LED
+_0xF1:
+	MOV  R26,R14
 	RCALL _Display7SEGMENT
-; 0000 007E             }
-; 0000 007F             if (nutSW1 == 0 && nutSW1truoc == 1) // If PORTD pin 4 is LOW (button pressed) and was HIGH before
-_0xDA:
-	TST  R4
-	BRNE _0xE0
+; 0000 0126             }
+; 0000 0127             if (nutSW1 == 0 && nutSW1truoc == 1) // If PORTD pin 4 is LOW (button pressed) and was HIGH before
+_0xED:
+	TST  R10
+	BRNE _0xF3
 	LDI  R30,LOW(1)
-	CP   R30,R6
-	BREQ _0xE1
-_0xE0:
-	RJMP _0xDF
-_0xE1:
-; 0000 0080             {
-; 0000 0081                 if (demNut1 == 0) demNut1 = 9; // Reset count to 9 if it goes below 0
-	TST  R8
-	BRNE _0xE2
+	CP   R30,R12
+	BREQ _0xF4
+_0xF3:
+	RJMP _0xF2
+_0xF4:
+; 0000 0128             {
+; 0000 0129                 if (demNut1 == 0) demNut1 = 9; // Reset count to 9 if it goes below 0
+	TST  R14
+	BRNE _0xF5
 	LDI  R30,LOW(9)
-	MOV  R8,R30
-; 0000 0082                 else demNut1--; // Decrement the count of button presses for switch 1
-	RJMP _0xE3
-_0xE2:
-	DEC  R8
-; 0000 0083                 Display7SEGMENT(demNut1); // Display the count on the 7-segment LED
-_0xE3:
-	MOV  R26,R8
+	MOV  R14,R30
+; 0000 012A                 else demNut1--; // Decrement the count of button presses for switch 1
+	RJMP _0xF6
+_0xF5:
+	DEC  R14
+; 0000 012B                 Display7SEGMENT(demNut1); // Display the count on the 7-segment LED
+_0xF6:
+	MOV  R26,R14
 	RCALL _Display7SEGMENT
-; 0000 0084             }
-; 0000 0085         }
-_0xDF:
-; 0000 0086 
-; 0000 0087 
-; 0000 0088         delay_ms(20); // Wait for 20 ms to debounce the button press
-_0xD9:
+; 0000 012C             }
+; 0000 012D         }
+_0xF2:
+; 0000 012E 
+; 0000 012F 
+; 0000 0130         delay_ms(20); // Wait for 20 ms to debounce the button press
+_0xEC:
 	LDI  R26,LOW(20)
 	LDI  R27,0
 	CALL _delay_ms
-; 0000 0089     }
-	RJMP _0xD1
-; 0000 008A }
-_0xE4:
+; 0000 0131     }
 	RJMP _0xE4
+; 0000 0132 }
+_0xF7:
+	RJMP _0xF7
 ; .FEND
+	#ifndef __SLEEP_DEFINED__
+	#define __SLEEP_DEFINED__
+	.EQU __se_bit=0x01
+	.EQU __sm_mask=0x0E
+	.EQU __sm_adc_noise_red=0x02
+	.EQU __sm_powerdown=0x04
+	.EQU __sm_powersave=0x06
+	.EQU __sm_standby=0x0C
+	.EQU __sm_ext_standby=0x0E
+	.SET power_ctrl_reg=smcr
+	#endif
+
+	.CSEG
+
+	.CSEG
+
+	.CSEG
+
+	.DSEG
+_rx_buffer0:
+	.BYTE 0x40
+_tx_buffer0:
+	.BYTE 0x40
+_nutSW3truoc:
+	.BYTE 0x1
+_trangThai:
+	.BYTE 0x1
 
 	.CSEG
 ;OPTIMIZER ADDED SUBROUTINE, CALLED 5 TIMES, CODE SIZE REDUCTION:5 WORDS
@@ -1627,12 +1973,19 @@ SUBOPT_0x2:
 	LDI  R30,0
 	SBIC 0x9,4
 	LDI  R30,1
-	MOV  R4,R30
+	MOV  R10,R30
 	LDI  R30,0
 	SBIC 0x9,7
 	LDI  R30,1
-	MOV  R3,R30
+	MOV  R9,R30
 	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:1 WORDS
+SUBOPT_0x3:
+	LDI  R26,LOW(10)
+	CALL _putchar
+	LDI  R26,LOW(13)
+	JMP  _putchar
 
 
 	.CSEG
