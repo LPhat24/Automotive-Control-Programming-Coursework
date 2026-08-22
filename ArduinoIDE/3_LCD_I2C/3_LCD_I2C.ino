@@ -76,9 +76,23 @@ void loop()
 {
 	dem++;
 	lcd.setCursor(0, 1);
-	lcd.print(dem/100);
-	lcd.print(dem/10%10);
-	lcd.print(dem%10);
+	// lcd.print(dem/100);
+	// lcd.print(dem/10%10);
+	// lcd.print(dem%10);
+	if (dem < 10)
+	{
+		lcd.print("  ");
+		lcd.print(dem);
+	}
+	else if (dem < 100)
+	{
+		lcd.print(" ");
+		lcd.print(dem);
+	}
+	else
+	{
+		lcd.print(dem);
+	}
 	delay(100);
 }
 
