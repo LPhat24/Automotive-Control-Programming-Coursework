@@ -1266,7 +1266,7 @@ _ext_int1_isr:
 	LDI  R31,HIGH(1)
 	__ADDWRR 3,4,30,31
 ; 0000 000C }
-	RJMP _0xF1
+	RJMP _0xF3
 ; .FEND
 ;
 ;//----------ADC----------
@@ -1390,7 +1390,7 @@ _0x8:
 _0x6:
 	LD   R16,Y+
 	LD   R17,Y+
-	RJMP _0xF1
+	RJMP _0xF3
 ; .FEND
 ;
 ;#ifndef _DEBUG_TERMINAL_IO_
@@ -1461,7 +1461,7 @@ _usart_tx_isr:
 _0x10:
 ; 0000 0080 }
 _0xF:
-_0xF1:
+_0xF3:
 	LD   R30,Y+
 	OUT  SREG,R30
 	LD   R31,Y+
@@ -1977,7 +1977,7 @@ _0xEC:
 	STS  _trangThai,R30
 ; 0000 015C             if (trangThai)
 	CPI  R30,0
-	BREQ _0xED
+	BRNE _0xEE
 ; 0000 015D             {
 ; 0000 015E                 // Display7SEGMENT(nhietdo % 10); // ON: show the ones digit of the last temperature
 ; 0000 015F                 // putchar('O');
@@ -1985,98 +1985,113 @@ _0xEC:
 ; 0000 0161                 // putchar(10);
 ; 0000 0162                 // putchar(13);
 ; 0000 0163                 // putchar(7); // Bell sound
-; 0000 0164                 Display7SEGMENT(demXung % 10);
+; 0000 0164 
+; 0000 0165             }
+; 0000 0166             else
+; 0000 0167             {
+; 0000 0168                 Display7SEGMENT(16); // OFF: blank display
+	LDI  R26,LOW(16)
+	RCALL _Display7SEGMENT
+; 0000 0169                 // putchar('O');
+; 0000 016A                 // putchar('F');
+; 0000 016B                 // putchar('F');
+; 0000 016C                 // putchar(10);
+; 0000 016D                 // putchar(13);
+; 0000 016E                 // putchar(7); // Bell sound
+; 0000 016F             }
+_0xEE:
+; 0000 0170         }
+; 0000 0171 
+; 0000 0172         // if (trangThai) // SW1/SW2 only work when the system is ON
+; 0000 0173         // {
+; 0000 0174         //     if (nutSW2 == 0 && nutSW2truoc == 1) // If PORTD pin 7 is LOW (button pressed) and was HIGH before
+; 0000 0175         //     {
+; 0000 0176         //         if (demNut1 < 10) // Only act if below 30 degrees C
+; 0000 0177         //         {
+; 0000 0178         //             demNut1++; // Increase, stops at 10 (30 degrees C)
+; 0000 0179         //             nhietdo = demNut1 + 20; // Convert the count to a temperature value
+; 0000 017A         //             putchar(nhietdo/10 + 48); // Send the count as a character over UART
+; 0000 017B         //             putchar(nhietdo%10 + 48); // Send the count as a character over UART
+; 0000 017C         //             putchar(186); // Degree symbol
+; 0000 017D         //             putchar('C'); // Celsius symbol
+; 0000 017E         //             putchar(10); // New line
+; 0000 017F         //             putchar(13); // Carriage return
+; 0000 0180         //             Display7SEGMENT(nhietdo % 10); // Display the ones digit of the temperature on the 7-segment LED
+; 0000 0181         //         }
+; 0000 0182         //     }
+; 0000 0183         //     if (nutSW1 == 0 && nutSW1truoc == 1) // If PORTD pin 4 is LOW (button pressed) and was HIGH before
+; 0000 0184         //     {
+; 0000 0185         //         if (demNut1 > 0) // Only act if above 20 degrees C
+; 0000 0186         //         {
+; 0000 0187         //             demNut1--; // Decrease, stops at 0 (20 degrees C)
+; 0000 0188         //             nhietdo = demNut1 + 20; // Convert the count to a temperature value
+; 0000 0189         //             putchar(nhietdo/10 + 48); // Send the count as a character over UART
+; 0000 018A         //             putchar(nhietdo%10 + 48); // Send the count as a character over UART
+; 0000 018B         //             putchar(186); // Degree symbol
+; 0000 018C         //             putchar('C'); // Celsius symbol
+; 0000 018D         //             putchar(10); // New line
+; 0000 018E         //             putchar(13); // Carriage return
+; 0000 018F         //             Display7SEGMENT(nhietdo % 10); // Display the ones digit of the temperature on the 7-segment LED
+; 0000 0190         //         }
+; 0000 0191         //     }
+; 0000 0192         // }
+; 0000 0193 
+; 0000 0194         gui_unint(kqADC6); // Send the ADC value from channel 6 over UART
+_0xEA:
+	LDS  R26,_kqADC6
+	LDS  R27,_kqADC6+1
+	RCALL _gui_unint
+; 0000 0195         putchar(' '); // Send a space character
+	LDI  R26,LOW(32)
+	RCALL _putchar
+; 0000 0196         gui_unint(kqADC7); // Send the ADC value from channel 7 over UART
+	LDS  R26,_kqADC7
+	LDS  R27,_kqADC7+1
+	RCALL _gui_unint
+; 0000 0197         putchar(' '); // Send a space character
+	LDI  R26,LOW(32)
+	RCALL _putchar
+; 0000 0198         gui_unint(demXung); // Send the count of button presses over UART
+	__GETW2R 3,4
+	RCALL _gui_unint
+; 0000 0199         putchar(' '); // Send a space character
+	LDI  R26,LOW(32)
+	CALL SUBOPT_0x6
+; 0000 019A         putchar(10); // New line
+; 0000 019B         putchar(13); // Carriage return
+; 0000 019C 
+; 0000 019D         // Live display: ones digit of pulse count while ON, blank while OFF
+; 0000 019E         if (trangThai)
+	LDS  R30,_trangThai
+	CPI  R30,0
+	BREQ _0xEF
+; 0000 019F         {
+; 0000 01A0             Display7SEGMENT(demXung % 10);
 	__GETW2R 3,4
 	LDI  R30,LOW(10)
 	LDI  R31,HIGH(10)
 	CALL __MODW21U
 	MOV  R26,R30
-	RJMP _0xF0
-; 0000 0165 
-; 0000 0166             }
-; 0000 0167             else
-_0xED:
-; 0000 0168             {
-; 0000 0169                 Display7SEGMENT(16); // OFF: blank display
+	RJMP _0xF2
+; 0000 01A1         }
+; 0000 01A2         else
+_0xEF:
+; 0000 01A3         {
+; 0000 01A4             Display7SEGMENT(16);
 	LDI  R26,LOW(16)
-_0xF0:
+_0xF2:
 	RCALL _Display7SEGMENT
-; 0000 016A                 // putchar('O');
-; 0000 016B                 // putchar('F');
-; 0000 016C                 // putchar('F');
-; 0000 016D                 // putchar(10);
-; 0000 016E                 // putchar(13);
-; 0000 016F                 // putchar(7); // Bell sound
-; 0000 0170             }
-; 0000 0171         }
-; 0000 0172 
-; 0000 0173         // if (trangThai) // SW1/SW2 only work when the system is ON
-; 0000 0174         // {
-; 0000 0175         //     if (nutSW2 == 0 && nutSW2truoc == 1) // If PORTD pin 7 is LOW (button pressed) and was HIGH before
-; 0000 0176         //     {
-; 0000 0177         //         if (demNut1 < 10) // Only act if below 30 degrees C
-; 0000 0178         //         {
-; 0000 0179         //             demNut1++; // Increase, stops at 10 (30 degrees C)
-; 0000 017A         //             nhietdo = demNut1 + 20; // Convert the count to a temperature value
-; 0000 017B         //             putchar(nhietdo/10 + 48); // Send the count as a character over UART
-; 0000 017C         //             putchar(nhietdo%10 + 48); // Send the count as a character over UART
-; 0000 017D         //             putchar(186); // Degree symbol
-; 0000 017E         //             putchar('C'); // Celsius symbol
-; 0000 017F         //             putchar(10); // New line
-; 0000 0180         //             putchar(13); // Carriage return
-; 0000 0181         //             Display7SEGMENT(nhietdo % 10); // Display the ones digit of the temperature on the 7-segment LED
-; 0000 0182         //         }
-; 0000 0183         //     }
-; 0000 0184         //     if (nutSW1 == 0 && nutSW1truoc == 1) // If PORTD pin 4 is LOW (button pressed) and was HIGH before
-; 0000 0185         //     {
-; 0000 0186         //         if (demNut1 > 0) // Only act if above 20 degrees C
-; 0000 0187         //         {
-; 0000 0188         //             demNut1--; // Decrease, stops at 0 (20 degrees C)
-; 0000 0189         //             nhietdo = demNut1 + 20; // Convert the count to a temperature value
-; 0000 018A         //             putchar(nhietdo/10 + 48); // Send the count as a character over UART
-; 0000 018B         //             putchar(nhietdo%10 + 48); // Send the count as a character over UART
-; 0000 018C         //             putchar(186); // Degree symbol
-; 0000 018D         //             putchar('C'); // Celsius symbol
-; 0000 018E         //             putchar(10); // New line
-; 0000 018F         //             putchar(13); // Carriage return
-; 0000 0190         //             Display7SEGMENT(nhietdo % 10); // Display the ones digit of the temperature on the 7-segment LED
-; 0000 0191         //         }
-; 0000 0192         //     }
-; 0000 0193         // }
-; 0000 0194 
-; 0000 0195         gui_unint(kqADC6); // Send the ADC value from channel 6 over UART
-_0xEA:
-	LDS  R26,_kqADC6
-	LDS  R27,_kqADC6+1
-	RCALL _gui_unint
-; 0000 0196         putchar(' '); // Send a space character
-	LDI  R26,LOW(32)
-	RCALL _putchar
-; 0000 0197         gui_unint(kqADC7); // Send the ADC value from channel 7 over UART
-	LDS  R26,_kqADC7
-	LDS  R27,_kqADC7+1
-	RCALL _gui_unint
-; 0000 0198         putchar(' '); // Send a space character
-	LDI  R26,LOW(32)
-	RCALL _putchar
-; 0000 0199         gui_unint(demXung); // Send the count of button presses over UART
-	__GETW2R 3,4
-	RCALL _gui_unint
-; 0000 019A         putchar(' '); // Send a space character
-	LDI  R26,LOW(32)
-	CALL SUBOPT_0x6
-; 0000 019B         putchar(10); // New line
-; 0000 019C         putchar(13); // Carriage return
-; 0000 019D 
-; 0000 019E         delay_ms(200); // Wait for 200 ms
+; 0000 01A5         }
+; 0000 01A6 
+; 0000 01A7         delay_ms(200); // Wait for 200 ms
 	LDI  R26,LOW(200)
 	LDI  R27,0
 	CALL _delay_ms
-; 0000 019F     }
+; 0000 01A8     }
 	RJMP _0xE7
-; 0000 01A0 }
-_0xEF:
-	RJMP _0xEF
+; 0000 01A9 }
+_0xF1:
+	RJMP _0xF1
 ; .FEND
 	#ifndef __SLEEP_DEFINED__
 	#define __SLEEP_DEFINED__

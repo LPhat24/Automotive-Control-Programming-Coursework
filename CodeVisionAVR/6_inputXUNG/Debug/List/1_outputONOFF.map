@@ -39,4 +39,4 @@ usart_tx_isr                                                                    
 putchar                                                                           0x000C9     29
 Display7SEGMENT                                                                   0x000E6    107
 gui_unint                                                                         0x00151     31
-main                                                                              0x00170    167
+main                                                                              0x00170    173

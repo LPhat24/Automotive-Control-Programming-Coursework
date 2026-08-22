@@ -353,7 +353,6 @@ void main(void)
                 // putchar(10);
                 // putchar(13);
                 // putchar(7); // Bell sound
-                Display7SEGMENT(demXung % 10);
 
             }
             else 
@@ -410,6 +409,16 @@ void main(void)
         putchar(' '); // Send a space character
         putchar(10); // New line
         putchar(13); // Carriage return
+
+        // Live display: ones digit of pulse count while ON, blank while OFF
+        if (trangThai)
+        {
+            Display7SEGMENT(demXung % 10);
+        }
+        else
+        {
+            Display7SEGMENT(16);
+        }
 
         delay_ms(200); // Wait for 200 ms
     }
