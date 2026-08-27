@@ -1,0 +1,6 @@
+= TrTmonitor Library for Arduino =
+
+== License ==
+Copyright (c) TrTHUC.
+
+Date: 28/05/2023
