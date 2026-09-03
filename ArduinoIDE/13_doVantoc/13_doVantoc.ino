@@ -32,10 +32,13 @@ uint8_t lockCuaTruoc;
 uint32_t thoidiemDENtruoc;
 uint8_t TrangthaiNUT1, TrangthaiNUT2;
 uint8_t NUT1truoc, NUT2truoc;
+uint32_t demXung2;
+uint32_t quangduong2;
 
 
 void ngatngoai1() {
-  demXung ++;
+  demXung ++; // Biến dùng để xác định trip của xe
+  demXung2 ++; // Biến dùng để reset lại quãng đường xe mỗi lần dừng, đảm bảo nếu dừng thì quãng đường sẽ reset về 0, tránh trường hợp xe vừa qua 10km/h là lock cửa
   tdTruoc = tdHientai; // Cập nhật thời điểm trước
   tdHientai = micros(); // Lấy thời điểm hiện tại khi có xung
   chuky = tdHientai - tdTruoc; // Tính chu kỳ
@@ -49,6 +52,7 @@ void setup() {
 
 void loop() {
 
+  // Bánh xe có 20 xung, chu vi 2m, nên mỗi xung tương ứng với 0.1m quãng đường
   // Nhận diện cạnh lên (vừa nhấn) từ giá trị nút đã giải mã ở vòng lặp trước
   TrangthaiNUT1 = (NUT1 == 1 && NUT1truoc == 0) ? 1 : 0;
   TrangthaiNUT2 = (NUT2 == 1 && NUT2truoc == 0) ? 1 : 0;
@@ -72,6 +76,7 @@ void loop() {
   if (NUT4 == 1)
   {
     demXung = 0; // Nếu nút nhấn NUT4 được nhấn thì reset số xung về 0
+    demXung2 = 0; // Reset biến đếm xung thứ hai
     quangduong = 0; // Reset quãng đường về 0
   }
 
@@ -87,16 +92,18 @@ void loop() {
     DieukhienThucong = 1;
   }
 
-  // Khoa tu dong khi vantoc > 10 va quangduong > 50, chi khi chua bi dieu khien thu cong ghi de
-  if (!DieukhienThucong && vantoc > 10 && quangduong > 50 && lockCua == 0) 
+  // Khoa tu dong khi vantoc > 10 va quangduong2 > 50, chi khi chua bi dieu khien thu cong ghi de
+  if (!DieukhienThucong && vantoc > 10 && demXung2 > 500 && lockCua == 0) 
   {
     lockCua = 1; // Khoa cua tu dong
   }
 
   // Khi dieu kien tu dong khong con thoa thi cho phep tu dong kich hoat lai
-  if (!(vantoc > 10 && quangduong > 50))
+  // Xe dung lai, van toc = 0, demXung2 = 0, dieu khien thu cong = 0, cho phep tu dong kich hoat lai
+  if (vantoc == 0)
   {
     DieukhienThucong = 0;
+    demXung2 = 0; // Reset biến đếm xung thứ hai khi điều kiện tự động không còn thỏa
   }
 
   // Tao xung 2s cho DEN khi trang thai khoa thay doi
@@ -121,7 +128,7 @@ void loop() {
   
 
   goimaytinh1 = vantoc; // Gửi tốc độ lên App
-  goimaytinh2 = quangduong; // Gửi quãng đường lên App
+  goimaytinh2 = demXung2 / 10; // Gửi quãng đường lên App
   // Đóng gói các bit vào byte trước khi gửi
   DENgoimaytinh = DEN1 + DEN2*2 + DEN3*4 + DEN4*8; 
   // Đồng bộ Arduino & App (truyền nhận Arduino & App): cần tối thiểu 20ms
