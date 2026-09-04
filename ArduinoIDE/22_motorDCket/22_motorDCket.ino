@@ -26,13 +26,10 @@ uint32_t thoidiem;
 
 
 //-----------------Application Variable-----------------------
-uint8_t tayga; //giá trị tay ga nhận từ App
-int16_t giatriTocdo; //tốc độ motor DC
-volatile int32_t demXung = 0; //biến đếm xung từ encoder
-volatile int32_t demXungtruoc = 0; //biến đếm xung trước
+volatile int32_t demXung, demXungSet; //biến đếm xung từ encoder 
 uint32_t tdHientai, tdTruoc, chuky; //biến thời gian hiện tại, thời gian trước, chu kỳ
-int32_t tanso; //biến tần số
-int8_t thuannguoc; //biến cờ quay thuận hay quay ngược
+int32_t tanso, tansoTruoc; //biến tần số
+int32_t giatoc;
 
 
 //-----------------Function-----------------------------------
@@ -56,7 +53,10 @@ void DKmotor1 (int16_t x)
   } 
   else 
   {
-    analogWrite(ENA, 0); // Quay tự do, IN1 và IN2 không quan trọng
+    //analogWrite(ENA, 0); // Quay tự do, IN1 và IN2 không quan trọng
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, LOW);
+    analogWrite(ENA, 170); // Hãm điện động, IN1 và IN2 ngắn mạch
 
   }
 }
@@ -66,14 +66,11 @@ void ngatngoai1() {
   if (digitalRead(2) == HIGH) 
   {
     demXung++; // Tăng số xung đếm được khi động cơ quay thuận
-    thuannguoc = 1; // Đặt cờ quay thuận
   } 
   else 
   {
     demXung--; // Giảm số xung đếm được khi động cơ quay ngược
-    thuannguoc = -1; // Đặt cờ quay ngược
   }
-  
 
   tdTruoc = tdHientai; // Cập nhật thời điểm trước
   tdHientai = micros(); // Lấy thời điểm hiện tại khi có xung
@@ -91,58 +88,59 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(3), ngatngoai1, FALLING); // Gán ngắt cho chân 3
   chuky = 10000000; // Khởi tạo chu kỳ lớn để tránh chia cho 0
   Monitor.begin(19200);
-  nhanMaytinh1 = 128; // Set 128 để ban đầu để động cơ dừng
-  DEN1 = 0; // Tắt LED1
-  DEN2 = 0; // Tắt LED2
+
 }
 //=========================================================
 void loop() {
 
+  tansoTruoc = tanso; // Cập nhật tần số trước
   if (micros() - tdHientai > 1000000) 
   {
     // Kiểm tra nếu đã đủ 1 giây
     tanso = 0;
-    thuannguoc = 0; // Reset cờ quay thuận/ngược nếu không có xung trong 1 giây
   } 
   else 
   {
     tanso = 1000000 / chuky; // Tính tần số từ chu kỳ
   }
-  
-  tayga = nhanMaytinh1;  // Nhận giá trị tay ga từ App
 
-  if (tayga <= 110)
+  giatoc = (tanso - tansoTruoc); // Không cần phải chia deltaT vì nó chỉ là hằng số, kết quả là đơn vị không biết 
+
+  if (NUT1)
   {
-    giatriTocdo = map(tayga, 0, 110, -186, -1); //giá trị tay ga từ 0-110 -> tốc độ motor DC từ -186 đến -1
-    DKmotor1(giatriTocdo);
+    demXungSet = 3000; // Set số xung đếm được khi nhấn nút 1
   }
-  else if (tayga >= 145)
+  if (NUT4)
   {
-    giatriTocdo = map(tayga, 145, 255, 1, 186); //giá trị tay ga từ 145-255 -> tốc độ motor DC từ 1 đến 186
-    DKmotor1(giatriTocdo);
+    demXungSet = 0; // Set số xung đếm được khi nhấn nút 4
+  }
+
+  // Kiểm tra kẹt
+  if (giatoc < -25) 
+  {
+    demXungSet = demXung; // Nếu kẹt, giữ nguyên số xung đếm được
+  }
+
+  //------------------------------------------------
+  if (demXung < (demXungSet - 50))
+  {
+    DKmotor1(100); // Quay thuận
+  }
+  else if (demXung > (demXungSet + 50))
+  {
+    DKmotor1(-100); // Quay ngược
   }
   else
   {
-    giatriTocdo = 0; //đặt tốc độ motor DC là 0
-    DKmotor1(giatriTocdo);
+    DKmotor1(0); // Dừng motor DC
   }
 
-  if (thuannguoc == 1) 
-  {
-    DEN1 = 1; DEN2 = 0; // Quay thuận, bật LED1
-  }
-  else if (thuannguoc == -1) 
-  {
-    DEN1 = 0; DEN2 = 1; // Quay ngược, bật LED2
-  }
-  else 
-  {
-    DEN1 = 0; DEN2 = 0; // Dừng, tắt tất cả LED
-  }
+  
+
 
   // --------------------------------------------
   goimaytinh1 = demXung; // Gửi số xung đếm được lên App
-  goimaytinh2 = tanso * thuannguoc; // Gửi tần số lên App, cho phép tần số âm nếu quay ngược
+  goimaytinh2 = giatoc; // Gửi số xung Target lên App
   //---------------------------------------------------------------------------------------------------------
   // Đóng gói các bit vào byte trước khi gửi
   DENgoimaytinh = DEN1 + DEN2*2 + DEN3*4 + DEN4*8; 
@@ -153,8 +151,8 @@ void loop() {
   NUT2 = (nutMaytinh&2)>>1;
   NUT3 = (nutMaytinh&4)>>2;
   NUT4 = (nutMaytinh&8)>>3;
-  // while (millis() - thoidiem < 20) { ; } //tối thiểu 20ms để đồng bộ truyền nhận Arduino & App
-  // thoidiem = millis();
+  while (millis() - thoidiem < 20) { ; } //tối thiểu 20ms để đồng bộ truyền nhận Arduino & App
+  thoidiem = millis();
   //---------------------------------------------------------------------------------------------------------
 }
 //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
