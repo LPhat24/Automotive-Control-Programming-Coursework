@@ -1,5 +1,5 @@
 //xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-//----------CHƯƠNG TRÌNH ĐIỀU KHIỂN MOTOR BƯỚC có 2048 bước / vòng----------------
+//----------CHƯƠNG TRÌNH ĐIỀU KHIỂN MOTOR BƯỚC----------------
 //------TrT Monitor   ----------------------------------------
 #include <TrTmonitor.h>
 TrTmonitor Monitor(0);
@@ -30,7 +30,13 @@ uint32_t thoidiem;
 #define B4off digitalWrite(B4, LOW)
 
 //-----------------Application Variable-----------------------
-int16_t vitriSet, viTri; // đơn vị là số lần gọi hàm = 4 bước
+uint16_t vitriSet;
+int16_t vitriHientai; // đơn vị là số lần gọi hàm = 4 bước
+int16_t kqADC6;
+int16_t nhietdo;
+uint8_t vitriCamchung;
+uint8_t khoangNhietdo;
+uint8_t bandoCamchung[10] = {114, 119, 126, 132, 136, 140, 144, 149, 154, 154}; // Bản đồ vị trí cầm chừng
 
 //----------------------------------------------------------
 void chaythuan (uint8_t x)
@@ -72,30 +78,43 @@ void setup() {
 //=========================================================
 void loop() {
 
-  if (NUT3)
+  // Tra bản đồ nhiệt độ -> vị trí cầm chừng
+  kqADC6 = analogRead(A6); // Read the analog value from A6
+  nhietdo = map (kqADC6, 0, 1023, -40, 215); // Map the analog value to a temperature range (-40 to 215 degrees Celsius)
+
+  if (nhietdo < 0) 
   {
-    vitriSet = 0; //nếu nhấn nút 3 thì đặt vị trí về 0
-  }
-  else if (NUT4)
+    vitriCamchung = 114; // Set the position to 114 if the temperature is below 0
+  } 
+  else if (nhietdo >= 140) 
   {
-    vitriSet = 170; //nếu nhấn nút 4 thì đặt vị trí về 170
+    vitriCamchung = 154; // Set the position to 154 if the temperature is above 140
+  } 
+  else 
+  {
+    khoangNhietdo = nhietdo / 14; // Calculate the temperature range index
+    vitriCamchung = bandoCamchung[khoangNhietdo]; // Set the position based on the temperature range
   }
-  
+
+  vitriSet = vitriCamchung * 2; // Set the target position to the calculated position, multiplied by 2 to account for the step size of the motor
+
+
+  // Điều khiển motor bước dựa trên giá trị vitriCamchung và vitriHientai
   if (NUT1)
   {
     chaynguoc(5);
   }
   else 
   {
-    // Điều khiển vị trí motor bước dựa trên giá trị vitriSet và viTri
-    if (viTri < vitriSet)
+    // Điều khiển vị trí motor bước dựa trên giá trị vitriCamchung và vitriHientai
+    if (vitriHientai < vitriSet)
     {
-      viTri ++; //tăng vị trí lên 1
+      vitriHientai  ++; //tăng vị trí lên 1
       chaythuan(5);
    }
-    else if (viTri > vitriSet)
+    else if (vitriHientai > vitriSet)
    {
-     viTri --; //giảm vị trí xuống 1
+     vitriHientai --; //giảm vị trí xuống 1
      chaynguoc(5);
    }
    else
@@ -104,26 +123,10 @@ void loop() {
    }
   }
 
-
-  // Điều khiển vị trí motor bước dựa trên giá trị vitriSet và viTri
-  if (viTri < vitriSet)
-  {
-    viTri ++; //tăng vị trí lên 1
-    chaythuan(5);
-  }
-  else if (viTri > vitriSet)
-  {
-    viTri --; //giảm vị trí xuống 1
-    chaynguoc(5);
-  }
-  else
-  {
-    dung(5);
-  }
   // --------------------------------------------
 
-  goimaytinh1 = vitriSet; //gửi vị trí hiện tại lên App
-  goimaytinh2 = viTri; //gửi vị trí hiện tại lên App
+  goimaytinh1 = nhietdo; //gửi nhiệt độ lên App
+  goimaytinh2 = vitriCamchung; //gửi vị trí cầm chừng lên App
   //---------------------------------------------------------------------------------------------------------
   // Đóng gói các bit vào byte trước khi gửi
   DENgoimaytinh = DEN1 + DEN2*2 + DEN3*4 + DEN4*8; 
