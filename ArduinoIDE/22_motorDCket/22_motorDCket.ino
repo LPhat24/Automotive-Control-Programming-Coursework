@@ -30,6 +30,7 @@ volatile int32_t demXung, demXungSet; //biến đếm xung từ encoder
 uint32_t tdHientai, tdTruoc, chuky; //biến thời gian hiện tại, thời gian trước, chu kỳ
 int32_t tanso, tansoTruoc; //biến tần số
 int32_t giatoc;
+int8_t lenXuong; //biến cờ lên xuống
 
 
 //-----------------Function-----------------------------------
@@ -109,16 +110,30 @@ void loop() {
   if (NUT1)
   {
     demXungSet = 3000; // Set số xung đếm được khi nhấn nút 1
+    lenXuong = 1; // Cờ lên
   }
   if (NUT4)
   {
     demXungSet = 0; // Set số xung đếm được khi nhấn nút 4
+    lenXuong = -1; // Cờ xuống
   }
 
   // Kiểm tra kẹt
   if (giatoc < -25) 
   {
-    demXungSet = demXung; // Nếu kẹt, giữ nguyên số xung đếm được
+    if (lenXuong == -1)
+    {
+      demXungSet = demXung; // Nếu kẹt, giữ nguyên số xung đếm được
+      lenXuong = 0; // Reset cờ xuống
+    }
+    else if (lenXuong == 1 && demXung < 2950) // Vì lên hết sẽ bị giật lùi (nhầm là bị kẹt) nên phải có demXung < 2950
+    {
+      DKmotor1(0); // Dừng motor DC nếu kẹt khi đang lên
+      delay(1000); // Dừng 1 giây
+      demXungSet = demXung - 300; // Giảm số xung đếm được để motor DC quay xuống 300 xung
+      if (demXungSet < 0) demXungSet = 0; // Không cho số xung đếm được âm
+      lenXuong = 0; // Reset cờ lên
+    }
   }
 
   //------------------------------------------------
